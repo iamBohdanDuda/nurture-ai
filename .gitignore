@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Expo & Build outputs
+.expo/
+.expo-shared/
+dist/
+web-build/
+*.apk
+*.aab
+*.ipa
+
+# Environment & Secrets
+.env
+.env.local
+.env*.local
+*.pem
+
+# Credentials & Keys
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# System & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+tsc_errors.txt
+
+# Temporary / Patch files
+*.orig.*
+*.rej

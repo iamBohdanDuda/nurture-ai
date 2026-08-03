@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "NurtureAI",
+    "slug": "nurtureai",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "nurtureai",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFF5F7"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nurtureai.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FFF5F7",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.nurtureai.app",
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#ED64A6"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "NurtureAI needs access to your photos to log meals.",
+          "cameraPermission": "NurtureAI needs access to your camera to take meal photos."
+        }
+      ],
+      "expo-image",
+      "expo-sharing",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "NurtureAI needs camera access to scan your meals."
+        }
+      ]
+    ]
+  }
+}
