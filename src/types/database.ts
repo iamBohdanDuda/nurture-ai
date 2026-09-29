@@ -57,57 +57,60 @@ export interface Database {
         };
         Relationships: [];
       };
+      chats: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       chat_history: {
         Row: {
           id: string;
           user_id: string;
+          chat_id: string | null;
           role: 'user' | 'assistant';
           content: string;
           image_url: string | null;
+          tool_call_hint?: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
+          chat_id?: string | null;
           role: 'user' | 'assistant';
           content: string;
           image_url?: string | null;
+          tool_call_hint?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
+          chat_id?: string | null;
           role?: 'user' | 'assistant';
           content?: string;
           image_url?: string | null;
+          tool_call_hint?: string | null;
           created_at?: string;
-        };
-        Relationships: [];
-      };
-      health_metrics: {
-        Row: {
-          id: string;
-          user_id: string;
-          metric_type: 'weight' | 'calories' | 'water' | 'symptom' | 'vitamin';
-          value: number;
-          notes: string | null;
-          logged_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          metric_type: 'weight' | 'calories' | 'water' | 'symptom' | 'vitamin';
-          value: number;
-          notes?: string | null;
-          logged_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          metric_type?: 'weight' | 'calories' | 'water' | 'symptom' | 'vitamin';
-          value?: number;
-          notes?: string | null;
-          logged_at?: string;
         };
         Relationships: [];
       };
@@ -358,7 +361,6 @@ export interface Database {
 // Convenience type aliases
 export type User = Database['public']['Tables']['users']['Row'];
 export type ChatMessage = Database['public']['Tables']['chat_history']['Row'];
-export type HealthMetric = Database['public']['Tables']['health_metrics']['Row'];
 export type Reminder = Database['public']['Tables']['reminders']['Row'];
 export type SymptomLog = Database['public']['Tables']['symptom_logs']['Row'];
 export type MealLog = Database['public']['Tables']['meal_logs']['Row'];
@@ -366,3 +368,4 @@ export type VitaminLog = Database['public']['Tables']['vitamin_logs']['Row'];
 export type HydrationLog = Database['public']['Tables']['hydration_logs']['Row'];
 export type WeightLog = Database['public']['Tables']['weight_logs']['Row'];
 export type KickLog = Database['public']['Tables']['kick_logs']['Row'];
+export type ChatSession = Database['public']['Tables']['chats']['Row'];

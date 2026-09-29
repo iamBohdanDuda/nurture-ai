@@ -4,19 +4,43 @@ import Animated, { FadeInRight } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@shopify/restyle';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Screen } from '@/components/layout/Screen';
 import { Box, Text } from '@/theme/restyleComponents';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { CalendarPicker } from '@/components/ui/CalendarPicker';
 import { Touchable } from '@/components/primitives/Touchable';
+import { GradientButton } from '@/components/ui/GradientComponents';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { useAuthStore } from '@/stores/authStore';
 import { authService } from '@/features/auth/services/authService';
 import { DIETARY_PREFERENCES, HEALTH_CONDITIONS } from '@/utils/pregnancy';
-import { type Theme } from '@/theme/theme';
+import { type Theme, GRADIENTS } from '@/theme/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const DIET_COLORS = [
+  { bg: '#F0FFF4', border: '#9AE6B4' }, // mint
+  { bg: '#FFF5F7', border: '#FBB6CE' }, // pink
+  { bg: '#FAF5FF', border: '#D6BCFA' }, // lavender
+  { bg: '#E0F7FA', border: '#80DEEA' }, // teal
+  { bg: '#FFF8E1', border: '#FFD54F' }, // gold
+  { bg: '#FFF0ED', border: '#FFC4B4' }, // coral
+  { bg: '#FFECD2', border: '#FFD8A8' }, // peach
+  { bg: '#EBF8FF', border: '#90CDF4' }, // sky
+  { bg: '#F0FFF4', border: '#68D391' }, // green
+];
+
+const HEALTH_COLORS = [
+  { bg: '#FFF5F7', border: '#FBB6CE' },
+  { bg: '#FFF8E1', border: '#FFD54F' },
+  { bg: '#EBF8FF', border: '#90CDF4' },
+  { bg: '#FAF5FF', border: '#D6BCFA' },
+  { bg: '#FFECD2', border: '#FFD8A8' },
+  { bg: '#E0F7FA', border: '#80DEEA' },
+  { bg: '#F0FFF4', border: '#9AE6B4' },
+];
 
 export function OnboardingScreen() {
   const theme = useTheme<Theme>();
@@ -73,11 +97,36 @@ export function OnboardingScreen() {
     // Step 1: Welcome + Name
     <Box key="name" width={SCREEN_WIDTH - 32} paddingHorizontal="m">
       <Animated.View entering={FadeInRight.duration(400)}>
+        {/* Botanical illustration placeholder */}
+        <Box alignItems="center" marginBottom="l">
+          <Box
+            width={140}
+            height={140}
+            borderRadius="full"
+            alignItems="center"
+            justifyContent="center"
+            style={{ overflow: 'hidden' }}
+          >
+            <LinearGradient
+              colors={GRADIENTS.headerSubtle}
+              style={{
+                width: 140,
+                height: 140,
+                borderRadius: 70,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 72, lineHeight: 84, textAlign: 'center' }}>🌸</Text>
+            </LinearGradient>
+          </Box>
+        </Box>
+
         <Text variant="h1" color="primary" textAlign="center" marginBottom="s">
-          Welcome! 👋
+          Welcome! 💖
         </Text>
         <Text variant="body" textAlign="center" marginBottom="xl" color="textSecondary">
-          Let's personalize your experience. What should we call you?
+          Let's personalize your journey. What should we call you?
         </Text>
         <Input
           label="Your Name"
@@ -89,7 +138,7 @@ export function OnboardingScreen() {
       </Animated.View>
     </Box>,
 
-    // Step 2: Pregnancy Start Date (Interactive Calendar Picker)
+    // Step 2: Pregnancy Start Date
     <Box key="date" width={SCREEN_WIDTH - 32} paddingHorizontal="m">
       <Animated.View entering={FadeInRight.duration(400)}>
         <Text variant="h2" textAlign="center" marginBottom="xs">
@@ -105,7 +154,7 @@ export function OnboardingScreen() {
       </Animated.View>
     </Box>,
 
-    // Step 3: Dietary Preferences
+    // Step 3: Dietary Preferences (multi-hue chips)
     <Box key="diet" width={SCREEN_WIDTH - 32} paddingHorizontal="m">
       <Animated.View entering={FadeInRight.duration(400)}>
         <Text variant="h2" textAlign="center" marginBottom="s">
@@ -115,8 +164,9 @@ export function OnboardingScreen() {
           Select all that apply. This helps our AI give better nutrition advice.
         </Text>
         <Box flexDirection="row" flexWrap="wrap" gap="s">
-          {DIETARY_PREFERENCES.map((pref) => {
+          {DIETARY_PREFERENCES.map((pref, index) => {
             const selected = data.dietaryPreferences.includes(pref);
+            const colorPair = DIET_COLORS[index % DIET_COLORS.length];
             return (
               <Touchable
                 key={pref}
@@ -128,18 +178,23 @@ export function OnboardingScreen() {
                 }}
               >
                 <Box
-                  backgroundColor={selected ? 'primaryLight' : 'inputBackground'}
                   borderRadius="full"
                   paddingHorizontal="m"
                   paddingVertical="s"
-                  borderWidth={selected ? 1.5 : 0}
-                  borderColor={selected ? 'primary' : undefined}
+                  borderWidth={selected ? 2 : 1}
+                  style={{
+                    backgroundColor: selected ? colorPair.border : colorPair.bg,
+                    borderColor: colorPair.border,
+                  }}
                 >
                   <Text
                     variant="bodySmall"
-                    color={selected ? 'primary' : 'textSecondary'}
+                    fontFamily={selected ? 'Inter_600SemiBold' : 'Inter_400Regular'}
+                    style={{
+                      color: selected ? '#FFFFFF' : theme.colors.textPrimary,
+                    }}
                   >
-                    {pref}
+                    {selected ? `✓ ${pref}` : pref}
                   </Text>
                 </Box>
               </Touchable>
@@ -149,7 +204,7 @@ export function OnboardingScreen() {
       </Animated.View>
     </Box>,
 
-    // Step 4: Health Conditions
+    // Step 4: Health Conditions (multi-hue chips)
     <Box key="health" width={SCREEN_WIDTH - 32} paddingHorizontal="m">
       <Animated.View entering={FadeInRight.duration(400)}>
         <Text variant="h2" textAlign="center" marginBottom="s">
@@ -159,8 +214,9 @@ export function OnboardingScreen() {
           This helps us provide safer recommendations.
         </Text>
         <Box flexDirection="row" flexWrap="wrap" gap="s">
-          {HEALTH_CONDITIONS.map((condition) => {
+          {HEALTH_CONDITIONS.map((condition, index) => {
             const selected = data.healthConditions.includes(condition);
+            const colorPair = HEALTH_COLORS[index % HEALTH_COLORS.length];
             return (
               <Touchable
                 key={condition}
@@ -172,18 +228,23 @@ export function OnboardingScreen() {
                 }}
               >
                 <Box
-                  backgroundColor={selected ? 'secondaryLight' : 'inputBackground'}
                   borderRadius="full"
                   paddingHorizontal="m"
                   paddingVertical="s"
-                  borderWidth={selected ? 1.5 : 0}
-                  borderColor={selected ? 'secondary' : undefined}
+                  borderWidth={selected ? 2 : 1}
+                  style={{
+                    backgroundColor: selected ? colorPair.border : colorPair.bg,
+                    borderColor: colorPair.border,
+                  }}
                 >
                   <Text
                     variant="bodySmall"
-                    color={selected ? 'secondary' : 'textSecondary'}
+                    fontFamily={selected ? 'Inter_600SemiBold' : 'Inter_400Regular'}
+                    style={{
+                      color: selected ? '#FFFFFF' : theme.colors.textPrimary,
+                    }}
                   >
-                    {condition}
+                    {selected ? `✓ ${condition}` : condition}
                   </Text>
                 </Box>
               </Touchable>
@@ -193,7 +254,7 @@ export function OnboardingScreen() {
       </Animated.View>
     </Box>,
 
-    // Step 5: Emergency & Health Pass Info (Optional)
+    // Step 5: Emergency & Health Pass Info
     <Box key="health_card" width={SCREEN_WIDTH - 32} paddingHorizontal="m">
       <Animated.View entering={FadeInRight.duration(400)}>
         <Text variant="h2" textAlign="center" marginBottom="s">
@@ -206,18 +267,28 @@ export function OnboardingScreen() {
         <Text variant="label" marginBottom="xs" color="textSecondary">
           Blood Type
         </Text>
-        <Box flexDirection="row" flexWrap="wrap" gap="xs" marginBottom="m">
+        <Box flexDirection="row" flexWrap="wrap" gap="s" marginBottom="m">
           {['O+', 'A+', 'B+', 'AB+', 'O-', 'A-', 'B-', 'AB-'].map((bt) => {
             const isSelected = data.bloodType === bt;
             return (
               <Touchable key={bt} onPress={() => updateData({ bloodType: bt })}>
                 <Box
-                  backgroundColor={isSelected ? 'primary' : 'inputBackground'}
-                  borderRadius="s"
-                  paddingHorizontal="m"
-                  paddingVertical="xs"
+                  width={56}
+                  height={48}
+                  borderRadius="m"
+                  alignItems="center"
+                  justifyContent="center"
+                  borderWidth={isSelected ? 2 : 1}
+                  style={{
+                    backgroundColor: isSelected ? theme.colors.primary : theme.colors.inputBackground,
+                    borderColor: isSelected ? theme.colors.primary : theme.colors.border,
+                  }}
                 >
-                  <Text variant="caption" color={isSelected ? 'textInverse' : 'textPrimary'}>
+                  <Text
+                    variant="label"
+                    fontFamily="Inter_600SemiBold"
+                    color={isSelected ? 'textInverse' : 'textPrimary'}
+                  >
                     {bt}
                   </Text>
                 </Box>
@@ -250,8 +321,8 @@ export function OnboardingScreen() {
     currentStep >= 2;
 
   return (
-    <Screen scrollable={false} padded={false} safeBottom={false} backgroundColor="mainBackground">
-      {/* Progress dots */}
+    <Screen scrollable={false} padded={false} safeBottom={false} hasTabBar={false} backgroundColor="mainBackground">
+      {/* Animated Progress Dots */}
       <Box
         flexDirection="row"
         justifyContent="center"
@@ -262,11 +333,28 @@ export function OnboardingScreen() {
         {Array.from({ length: totalSteps }).map((_, i) => (
           <Box
             key={i}
-            width={i === currentStep ? 24 : 8}
-            height={8}
+            height={6}
             borderRadius="full"
-            backgroundColor={i === currentStep ? 'primary' : 'border'}
-          />
+            style={{
+              width: i === currentStep ? 28 : 8,
+              overflow: 'hidden',
+            }}
+          >
+            {i === currentStep ? (
+              <LinearGradient
+                colors={GRADIENTS.primary}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{ flex: 1, borderRadius: 9999 }}
+              />
+            ) : (
+              <Box
+                flex={1}
+                borderRadius="full"
+                backgroundColor={i < currentStep ? 'primaryLight' : 'border'}
+              />
+            )}
+          </Box>
         ))}
       </Box>
 
@@ -298,14 +386,12 @@ export function OnboardingScreen() {
         />
       </Box>
 
-      {/* Navigation buttons fixed at bottom with safe area insets */}
+      {/* Navigation buttons */}
       <Box
         paddingHorizontal="m"
         paddingTop="s"
         paddingBottom="m"
         backgroundColor="mainBackground"
-        borderTopWidth={1}
-        borderColor="border"
         style={{ paddingBottom: Math.max(insets.bottom + 8, 16) }}
         flexDirection="row"
         gap="m"
@@ -316,13 +402,19 @@ export function OnboardingScreen() {
           </Box>
         )}
         <Box flex={currentStep > 0 ? 1 : undefined} width={currentStep === 0 ? '100%' : undefined}>
-          <Button
-            title={isLastStep ? "Let's Go! 🎉" : 'Continue'}
+          <Touchable
             onPress={isLastStep ? handleComplete : handleNext}
             disabled={!canProceed}
-            variant="primary"
-            size="lg"
-          />
+            activeScale={0.97}
+          >
+            <Box style={{ overflow: 'hidden', borderRadius: 16, opacity: canProceed ? 1 : 0.5 }}>
+              <GradientButton preset="primary" height={56} borderRadius={16}>
+                <Text variant="button" color="textInverse">
+                  {isLastStep ? "Let's Go! 🎉" : 'Continue'}
+                </Text>
+              </GradientButton>
+            </Box>
+          </Touchable>
         </Box>
       </Box>
     </Screen>

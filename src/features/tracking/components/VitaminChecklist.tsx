@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { TextInput, Alert } from 'react-native';
 import { useTheme } from '@shopify/restyle';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Box, Text } from '@/theme/restyleComponents';
 import { Touchable } from '@/components/primitives/Touchable';
@@ -32,6 +33,7 @@ export function VitaminChecklist() {
     if (user?.id && isAdding) {
       trackingService.logVitamin(user.id, vitaminName).catch((err) => {
         console.warn('Failed to sync vitamin log', err);
+        Alert.alert('Sync Error', 'Failed to save vitamin log to the cloud.');
       });
     }
   };
@@ -49,10 +51,41 @@ export function VitaminChecklist() {
   };
 
   return (
-    <Card variant="elevated" marginBottom="m">
+    <Card
+      variant="elevated"
+      marginBottom="m"
+      style={{ borderRadius: 20, overflow: 'hidden' }}
+    >
+      <LinearGradient
+        colors={[theme.colors.surfaceElevated, theme.colors.accentLight]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 20 }}
+      />
+
       <Box flexDirection="row" alignItems="center" justifyContent="space-between" marginBottom="m">
         <Box flexDirection="row" alignItems="center">
-          <Ionicons name="medical" size={24} color={theme.colors.accent} />
+          <Box
+            width={36}
+            height={36}
+            borderRadius="full"
+            alignItems="center"
+            justifyContent="center"
+            style={{ overflow: 'hidden' }}
+          >
+            <LinearGradient
+              colors={['#B794F4', '#9F7AEA']}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="medical" size={18} color="#FFFFFF" />
+            </LinearGradient>
+          </Box>
           <Text variant="h3" marginLeft="s">Daily Vitamins</Text>
         </Box>
         <Text variant="caption" color="textMuted">
@@ -77,21 +110,26 @@ export function VitaminChecklist() {
                   alignItems="center"
                   paddingVertical="s"
                   paddingHorizontal="m"
-                  backgroundColor={isTaken ? 'accentLight' : 'mainBackground'}
-                  borderRadius="m"
+                  borderRadius="l"
                   borderWidth={1}
-                  borderColor={isTaken ? 'accent' : 'border'}
+                  style={{
+                    backgroundColor: isTaken ? theme.colors.accentLight : theme.colors.surfaceFrosted,
+                    borderColor: isTaken ? theme.colors.accent : theme.colors.border,
+                    borderRadius: 14,
+                  }}
                 >
                   <Box
-                    width={24}
-                    height={24}
+                    width={26}
+                    height={26}
                     borderRadius="full"
                     borderWidth={2}
-                    borderColor={isTaken ? 'accent' : 'textMuted'}
-                    backgroundColor={isTaken ? 'accent' : 'transparent'}
                     alignItems="center"
                     justifyContent="center"
                     marginRight="m"
+                    style={{
+                      borderColor: isTaken ? theme.colors.accent : theme.colors.textMuted,
+                      backgroundColor: isTaken ? theme.colors.accent : 'transparent',
+                    }}
                   >
                     {isTaken && <Ionicons name="checkmark" size={16} color="white" />}
                   </Box>
@@ -108,8 +146,12 @@ export function VitaminChecklist() {
 
               {isCustom && (
                 <Touchable onPress={() => removeCustomVitamin(vit.id)} hitSlop={8} style={{ marginLeft: 8 }}>
-                  <Box padding="s" backgroundColor="inputBackground" borderRadius="full">
-                    <Ionicons name="trash-outline" size={18} color="#FF4D4D" />
+                  <Box
+                    padding="s"
+                    backgroundColor="coralLight"
+                    borderRadius="full"
+                  >
+                    <Ionicons name="trash-outline" size={18} color={theme.colors.coral} />
                   </Box>
                 </Touchable>
               )}
@@ -118,7 +160,7 @@ export function VitaminChecklist() {
         })}
       </Box>
 
-      {/* Add Custom Vitamin Input Section */}
+      {/* Add Custom Vitamin */}
       {customVitamins.length < 15 && (
         <Box
           flexDirection="row"
@@ -134,7 +176,8 @@ export function VitaminChecklist() {
             borderRadius="m"
             paddingHorizontal="m"
             marginRight="s"
-            backgroundColor="inputBackground"
+            backgroundColor="surfaceFrosted"
+            style={{ borderRadius: 12 }}
           >
             <TextInput
               style={{

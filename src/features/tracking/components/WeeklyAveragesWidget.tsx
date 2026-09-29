@@ -1,9 +1,11 @@
 import React from 'react';
 import { useTheme } from '@shopify/restyle';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Box, Text } from '@/theme/restyleComponents';
+import { GradientBadge } from '@/components/ui/GradientComponents';
 import { useTrackingStore } from '@/stores/trackingStore';
-import { type Theme } from '@/theme/theme';
+import { type Theme, GRADIENTS } from '@/theme/theme';
 
 export function WeeklyAveragesWidget() {
   const theme = useTheme<Theme>();
@@ -67,85 +69,81 @@ export function WeeklyAveragesWidget() {
 
   const averages = calculateAverages();
 
+  const metrics = [
+    { label: 'Avg Water', value: averages.avgWater, unit: 'ml/day', icon: 'water-outline' as const, color: theme.colors.info },
+    { label: 'Avg Calories', value: averages.avgCal, unit: 'kcal/day', icon: 'restaurant-outline' as const, color: theme.colors.secondary },
+    { label: 'Avg Weight', value: averages.avgWeight, unit: '', icon: 'fitness-outline' as const, color: theme.colors.accent },
+    { label: 'Avg Kicks', value: averages.avgKicks, unit: '/ session', icon: 'hand-left-outline' as const, color: theme.colors.primary },
+  ];
+
   return (
-    <Card variant="elevated" marginBottom="m">
+    <Card
+      variant="elevated"
+      marginBottom="m"
+      style={{ borderRadius: 20, overflow: 'hidden' }}
+    >
+      <LinearGradient
+        colors={[theme.colors.surfaceElevated, theme.colors.primaryLight]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 20 }}
+      />
+
       <Box flexDirection="row" alignItems="center" justifyContent="space-between" marginBottom="m">
         <Box flexDirection="row" alignItems="center">
-          <Ionicons name="stats-chart" size={22} color={theme.colors.primary} />
-          <Text variant="h3" marginLeft="s">7-Day Averages 📊</Text>
+          <Box
+            width={32}
+            height={32}
+            borderRadius="full"
+            alignItems="center"
+            justifyContent="center"
+            style={{ overflow: 'hidden' }}
+          >
+            <LinearGradient
+              colors={GRADIENTS.primary}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="stats-chart" size={16} color="#FFFFFF" />
+            </LinearGradient>
+          </Box>
+          <Text variant="h3" marginLeft="s">7-Day Averages</Text>
         </Box>
-        <Box backgroundColor="primaryLight" paddingHorizontal="s" paddingVertical="xs" borderRadius="full">
-          <Text variant="caption" color="primary" fontFamily="Inter_700Bold">
+        <GradientBadge preset="primary" style={{ paddingHorizontal: 12, paddingVertical: 4 }}>
+          <Text variant="statLabel" color="textInverse" style={{ textTransform: 'uppercase', letterSpacing: 0.8 }}>
             THIS WEEK
           </Text>
-        </Box>
+        </GradientBadge>
       </Box>
 
       {/* Grid of 4 Averages */}
       <Box flexDirection="row" flexWrap="wrap" gap="s">
-        {/* Avg Water */}
-        <Box
-          width="48%"
-          backgroundColor="mainBackground"
-          borderRadius="m"
-          padding="s"
-          borderWidth={1}
-          borderColor="border"
-        >
-          <Box flexDirection="row" alignItems="center" marginBottom="xs">
-            <Ionicons name="water-outline" size={16} color={theme.colors.info} />
-            <Text variant="caption" color="textMuted" marginLeft="xs">Avg Water</Text>
+        {metrics.map((metric) => (
+          <Box
+            key={metric.label}
+            width="48%"
+            backgroundColor="surfaceFrosted"
+            borderRadius="l"
+            padding="s"
+            borderWidth={1}
+            borderColor="border"
+            style={{ borderRadius: 14 }}
+          >
+            <Box flexDirection="row" alignItems="center" marginBottom="xs">
+              <Ionicons name={metric.icon} size={16} color={metric.color} />
+              <Text variant="statLabel" marginLeft="xs">{metric.label}</Text>
+            </Box>
+            <Text variant="h3" color="textPrimary">
+              {metric.value}{' '}
+              {metric.unit ? <Text variant="caption">{metric.unit}</Text> : null}
+            </Text>
           </Box>
-          <Text variant="h3" color="textPrimary">{averages.avgWater} <Text variant="caption">ml/day</Text></Text>
-        </Box>
-
-        {/* Avg Calories */}
-        <Box
-          width="48%"
-          backgroundColor="mainBackground"
-          borderRadius="m"
-          padding="s"
-          borderWidth={1}
-          borderColor="border"
-        >
-          <Box flexDirection="row" alignItems="center" marginBottom="xs">
-            <Ionicons name="restaurant-outline" size={16} color={theme.colors.secondary} />
-            <Text variant="caption" color="textMuted" marginLeft="xs">Avg Calories</Text>
-          </Box>
-          <Text variant="h3" color="textPrimary">{averages.avgCal} <Text variant="caption">kcal/day</Text></Text>
-        </Box>
-
-        {/* Avg Weight */}
-        <Box
-          width="48%"
-          backgroundColor="mainBackground"
-          borderRadius="m"
-          padding="s"
-          borderWidth={1}
-          borderColor="border"
-        >
-          <Box flexDirection="row" alignItems="center" marginBottom="xs">
-            <Ionicons name="fitness-outline" size={16} color={theme.colors.accent} />
-            <Text variant="caption" color="textMuted" marginLeft="xs">Avg Weight</Text>
-          </Box>
-          <Text variant="h3" color="textPrimary">{averages.avgWeight}</Text>
-        </Box>
-
-        {/* Avg Kicks */}
-        <Box
-          width="48%"
-          backgroundColor="mainBackground"
-          borderRadius="m"
-          padding="s"
-          borderWidth={1}
-          borderColor="border"
-        >
-          <Box flexDirection="row" alignItems="center" marginBottom="xs">
-            <Ionicons name="hand-left-outline" size={16} color={theme.colors.primary} />
-            <Text variant="caption" color="textMuted" marginLeft="xs">Avg Kicks</Text>
-          </Box>
-          <Text variant="h3" color="textPrimary">{averages.avgKicks} <Text variant="caption">/ session</Text></Text>
-        </Box>
+        ))}
       </Box>
     </Card>
   );

@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, StyleSheet, TextInput, Pressable } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@shopify/restyle';
 import { Ionicons } from '@expo/vector-icons';
-import { type Theme } from '@/theme/theme';
+import { type Theme, GRADIENTS } from '@/theme/theme';
 
 interface ChatInputBarProps {
   text: string;
@@ -15,8 +16,7 @@ interface ChatInputBarProps {
 }
 
 /**
- * Custom chat input bar with image attachment and send button.
- * Replaces default Gifted Chat input for themed styling.
+ * Premium chat input bar with gradient send button.
  */
 export function ChatInputBar({
   text,
@@ -35,23 +35,39 @@ export function ChatInputBar({
         style={[
           styles.inputRow,
           {
-            backgroundColor: theme.colors.inputBackground,
+            backgroundColor: theme.colors.surfaceElevated,
             borderColor: theme.colors.border,
-            borderRadius: theme.borderRadii.xl,
+            borderRadius: 28,
+            shadowColor: '#000',
+            shadowOpacity: 0.06,
+            shadowOffset: { width: 0, height: -2 },
+            shadowRadius: 8,
+            elevation: 3,
           },
         ]}
       >
-        {/* Image attach button */}
+        {/* Camera attach button */}
         <Pressable
           onPress={onImagePress}
           disabled={disabled}
           style={[styles.iconButton, { opacity: disabled ? 0.4 : 1 }]}
         >
-          <Ionicons
-            name="image-outline"
-            size={24}
-            color={theme.colors.textMuted}
-          />
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: theme.colors.peachSubtle,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Ionicons
+              name="camera"
+              size={20}
+              color={theme.colors.primary}
+            />
+          </View>
         </Pressable>
 
         {/* Text input */}
@@ -76,25 +92,37 @@ export function ChatInputBar({
           ]}
         />
 
-        {/* Send button */}
+        {/* Gradient send button */}
         <Pressable
           onPress={onSend}
           disabled={!canSend}
-          style={[
-            styles.sendButton,
-            {
-              backgroundColor: canSend
-                ? theme.colors.primary
-                : theme.colors.border,
-              borderRadius: 20,
-            },
-          ]}
+          style={styles.sendButtonContainer}
         >
-          <Ionicons
-            name="arrow-up"
-            size={20}
-            color={canSend ? '#FFFFFF' : theme.colors.textMuted}
-          />
+          <View style={{ borderRadius: 20, overflow: 'hidden' }}>
+            {canSend ? (
+              <LinearGradient
+                colors={GRADIENTS.primary}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.sendButton}
+              >
+                <Ionicons name="arrow-up" size={20} color="#FFFFFF" />
+              </LinearGradient>
+            ) : (
+              <View
+                style={[
+                  styles.sendButton,
+                  { backgroundColor: theme.colors.border },
+                ]}
+              >
+                <Ionicons
+                  name="arrow-up"
+                  size={20}
+                  color={theme.colors.textMuted}
+                />
+              </View>
+            )}
+          </View>
         </Pressable>
       </View>
     </Animated.View>
@@ -109,30 +137,38 @@ const styles = StyleSheet.create({
   },
   inputRow: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    minHeight: 48,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    minHeight: 52,
   },
   iconButton: {
-    padding: 6,
+    padding: 2,
     justifyContent: 'center',
     alignItems: 'center',
+    alignSelf: 'center',
   },
   textInput: {
     flex: 1,
     fontSize: 16,
-    lineHeight: 22,
+    lineHeight: 20,
     maxHeight: 120,
     paddingHorizontal: 8,
-    paddingVertical: 6,
+    paddingTop: 8,
+    paddingBottom: 8,
+    textAlignVertical: 'center',
+    alignSelf: 'center',
+  },
+  sendButtonContainer: {
+    marginLeft: 4,
+    alignSelf: 'center',
   },
   sendButton: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 4,
   },
 });

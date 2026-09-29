@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTheme } from '@shopify/restyle';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Box, Text } from '@/theme/restyleComponents';
 import { Touchable } from '@/components/primitives/Touchable';
@@ -11,24 +12,24 @@ import { usePregnancyWeek } from '@/hooks/usePregnancyWeek';
 import { type Theme } from '@/theme/theme';
 
 const COMMON_SYMPTOMS = [
-  'Nausea 🤢',
-  'Fatigue 😴',
-  'Backache ⚡',
-  'Heartburn 🔥',
-  'Headache 🤕',
-  'Cramps 😣',
-  'Swelling 🦶',
-  'Cravings 🍫',
-  'Mood Swings 🎭',
-  'Insomnia 🌙',
+  { name: 'Nausea 🤢', bg: '#FFF5F7', border: '#FBB6CE' },
+  { name: 'Fatigue 😴', bg: '#FAF5FF', border: '#D6BCFA' },
+  { name: 'Backache ⚡', bg: '#FFF8F0', border: '#FFD8A8' },
+  { name: 'Heartburn 🔥', bg: '#FFF0ED', border: '#FFC4B4' },
+  { name: 'Headache 🤕', bg: '#EBF8FF', border: '#90CDF4' },
+  { name: 'Cramps 😣', bg: '#F0FFF4', border: '#9AE6B4' },
+  { name: 'Swelling 🦶', bg: '#FFFDF0', border: '#FFECB3' },
+  { name: 'Cravings 🍫', bg: '#FFF8E1', border: '#FFD54F' },
+  { name: 'Mood Swings 🎭', bg: '#E9D8FD', border: '#B794F4' },
+  { name: 'Insomnia 🌙', bg: '#E0F7FA', border: '#80DEEA' },
 ];
 
 const SEVERITY_LEVELS = [
-  { level: 1, label: 'Mild', emoji: '🟢' },
-  { level: 2, label: 'Moderate', emoji: '🟡' },
-  { level: 3, label: 'Medium', emoji: '🟠' },
-  { level: 4, label: 'High', emoji: '🔴' },
-  { level: 5, label: 'Severe', emoji: '🚨' },
+  { level: 1, label: 'Mild', color: '#48BB78' },
+  { level: 2, label: 'Moderate', color: '#68D391' },
+  { level: 3, label: 'Medium', color: '#ECC94B' },
+  { level: 4, label: 'High', color: '#ED8936' },
+  { level: 5, label: 'Severe', color: '#E53E3E' },
 ];
 
 export function SymptomLogger() {
@@ -57,31 +58,69 @@ export function SymptomLogger() {
   };
 
   return (
-    <Card variant="elevated" marginBottom="m">
+    <Card
+      variant="elevated"
+      marginBottom="m"
+      style={{ borderRadius: 20, overflow: 'hidden' }}
+    >
+      <LinearGradient
+        colors={[theme.colors.surfaceElevated, theme.colors.secondaryLight]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 20 }}
+      />
+
       <Box flexDirection="row" alignItems="center" marginBottom="s">
-        <Ionicons name="pulse" size={24} color={theme.colors.secondary} />
-        <Text variant="h3" marginLeft="s">Log Symptoms & Severity</Text>
+        <Box
+          width={36}
+          height={36}
+          borderRadius="full"
+          alignItems="center"
+          justifyContent="center"
+          style={{ overflow: 'hidden' }}
+        >
+          <LinearGradient
+            colors={['#48BB78', '#38A169']}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Ionicons name="pulse" size={18} color="#FFFFFF" />
+          </LinearGradient>
+        </Box>
+        <Text variant="h3" marginLeft="s">Log Symptoms</Text>
       </Box>
       <Text variant="bodySmall" color="textSecondary" marginBottom="m">
-        Select a symptom and log its severity (1-5) to build your AI health timeline.
+        Select a symptom and log its severity to build your AI health timeline.
       </Text>
 
-      {/* Symptoms Pills */}
+      {/* Multi-hue Symptom Pills */}
       <Box flexDirection="row" flexWrap="wrap" gap="s" marginBottom="m">
         {COMMON_SYMPTOMS.map((symp) => {
-          const isSelected = activeSymptom === symp;
+          const isSelected = activeSymptom === symp.name;
           return (
-            <Touchable key={symp} onPress={() => setActiveSymptom(symp)}>
+            <Touchable key={symp.name} onPress={() => setActiveSymptom(symp.name)}>
               <Box
                 paddingVertical="s"
                 paddingHorizontal="m"
-                backgroundColor={isSelected ? 'secondary' : 'secondaryLight'}
                 borderRadius="full"
-                borderWidth={1}
-                borderColor="secondary"
+                borderWidth={isSelected ? 2 : 1}
+                style={{
+                  backgroundColor: isSelected ? symp.border : symp.bg,
+                  borderColor: symp.border,
+                }}
               >
-                <Text variant="label" color={isSelected ? 'textInverse' : 'textPrimary'}>
-                  {symp}
+                <Text
+                  variant="label"
+                  style={{
+                    color: isSelected ? '#FFFFFF' : theme.colors.textPrimary,
+                  }}
+                >
+                  {symp.name}
                 </Text>
               </Box>
             </Touchable>
@@ -89,18 +128,19 @@ export function SymptomLogger() {
         })}
       </Box>
 
-      {/* Severity Selector Drawer */}
+      {/* Severity Selector */}
       {activeSymptom && (
         <Box
           backgroundColor="primaryBackground"
-          borderRadius="m"
+          borderRadius="l"
           padding="m"
           borderWidth={1}
-          borderColor="secondary"
+          borderColor="border"
           marginBottom="m"
+          style={{ borderRadius: 16 }}
         >
           <Text variant="bodySmall" fontFamily="Inter_600SemiBold" marginBottom="s">
-            Select Severity for {activeSymptom}:
+            Severity for {activeSymptom}:
           </Text>
 
           <Box flexDirection="row" justifyContent="space-between" marginBottom="m">
@@ -110,15 +150,30 @@ export function SymptomLogger() {
                 <Touchable key={item.level} onPress={() => setSelectedSeverity(item.level)}>
                   <Box
                     alignItems="center"
-                    padding="xs"
-                    borderRadius="s"
-                    backgroundColor={isChosen ? 'secondaryLight' : 'transparent'}
+                    paddingVertical="xs"
+                    paddingHorizontal="s"
+                    borderRadius="m"
+                    style={{
+                      backgroundColor: isChosen ? `${item.color}20` : 'transparent',
+                    }}
                   >
-                    <Text style={{ fontSize: 20 }}>{item.emoji}</Text>
+                    <Box
+                      width={isChosen ? 28 : 20}
+                      height={isChosen ? 28 : 20}
+                      borderRadius="full"
+                      style={{
+                        backgroundColor: item.color,
+                        shadowColor: isChosen ? item.color : 'transparent',
+                        shadowOpacity: isChosen ? 0.4 : 0,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowRadius: 6,
+                      }}
+                    />
                     <Text
                       variant="caption"
                       fontFamily={isChosen ? 'Inter_700Bold' : 'Inter_400Regular'}
-                      color={isChosen ? 'secondary' : 'textSecondary'}
+                      color="textSecondary"
+                      marginTop="xs"
                     >
                       {item.level}
                     </Text>
@@ -129,7 +184,7 @@ export function SymptomLogger() {
           </Box>
 
           <Button
-            title={`Log ${activeSymptom} (Severity ${selectedSeverity}/5) 📝`}
+            title={`Log ${activeSymptom.split(' ')[0]} (${selectedSeverity}/5) 📝`}
             onPress={handleSaveSymptom}
             variant="secondary"
             size="sm"
@@ -137,7 +192,7 @@ export function SymptomLogger() {
         </Box>
       )}
 
-      {/* Recent Timestamped Symptom Logs */}
+      {/* Recent Symptom Logs */}
       {symptomLogs.length > 0 && (
         <Box paddingTop="m" borderTopWidth={1} borderColor="border">
           <Text variant="label" marginBottom="s" color="textSecondary">
@@ -150,8 +205,8 @@ export function SymptomLogger() {
                 flexDirection="row"
                 justifyContent="space-between"
                 alignItems="center"
-                backgroundColor="inputBackground"
-                borderRadius="s"
+                backgroundColor="peachSubtle"
+                borderRadius="m"
                 paddingHorizontal="m"
                 paddingVertical="s"
               >
@@ -160,12 +215,22 @@ export function SymptomLogger() {
                     {log.symptom_name}
                   </Text>
                   <Box
-                    backgroundColor="secondaryLight"
-                    borderRadius="s"
-                    paddingHorizontal="xs"
+                    borderRadius="full"
+                    paddingHorizontal="s"
+                    paddingVertical="xs"
                     marginLeft="s"
+                    style={{
+                      backgroundColor:
+                        SEVERITY_LEVELS[Math.min(log.severity - 1, 4)]?.color + '20',
+                    }}
                   >
-                    <Text variant="caption" color="secondary" fontFamily="Inter_700Bold">
+                    <Text
+                      variant="caption"
+                      fontFamily="Inter_700Bold"
+                      style={{
+                        color: SEVERITY_LEVELS[Math.min(log.severity - 1, 4)]?.color,
+                      }}
+                    >
                       Sev {log.severity}/5
                     </Text>
                   </Box>

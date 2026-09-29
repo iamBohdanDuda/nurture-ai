@@ -1,6 +1,7 @@
 import React from 'react';
 import { ScrollView } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Box, Text } from '@/theme/restyleComponents';
 import { Touchable } from '@/components/primitives/Touchable';
 import { useTheme } from '@shopify/restyle';
@@ -12,12 +13,12 @@ interface SuggestedQuestionsProps {
 }
 
 const SUGGESTIONS = [
-  { emoji: '🍎', text: "What's safe to eat this week?" },
-  { emoji: '🤢', text: 'How to manage morning sickness?' },
-  { emoji: '💊', text: 'Which vitamins should I take?' },
-  { emoji: '🏋️', text: 'Safe exercises for my trimester?' },
-  { emoji: '😴', text: 'Tips for better sleep?' },
-  { emoji: '📊', text: "How is my baby developing?" },
+  { emoji: '🍎', text: "What's safe to eat this week?", gradient: ['#FED7E2', '#FBB6CE'] },
+  { emoji: '🤢', text: 'How to manage morning sickness?', gradient: ['#C6F6D5', '#9AE6B4'] },
+  { emoji: '💊', text: 'Which vitamins should I take?', gradient: ['#E9D8FD', '#D6BCFA'] },
+  { emoji: '🏋️', text: 'Safe exercises for my trimester?', gradient: ['#FFECD2', '#FFD8A8'] },
+  { emoji: '😴', text: 'Tips for better sleep?', gradient: ['#E0F7FA', '#B2EBF2'] },
+  { emoji: '📊', text: "How is my baby developing?", gradient: ['#FFF8E1', '#FFECB3'] },
 ];
 
 export function SuggestedQuestions({ onSelect, visible }: SuggestedQuestionsProps) {
@@ -45,21 +46,30 @@ export function SuggestedQuestions({ onSelect, visible }: SuggestedQuestionsProp
               activeScale={0.95}
             >
               <Box
-                backgroundColor="primaryLight"
                 borderRadius="full"
-                paddingHorizontal="m"
-                paddingVertical="s"
                 flexDirection="row"
                 alignItems="center"
-                borderWidth={1}
-                borderColor="primary"
+                style={{ overflow: 'hidden' }}
               >
-                <Text style={{ fontSize: 16, lineHeight: 20, marginRight: 6 }}>
-                  {suggestion.emoji}
-                </Text>
-                <Text variant="bodySmall" color="primary">
-                  {suggestion.text}
-                </Text>
+                <LinearGradient
+                  colors={suggestion.gradient as any}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                    borderRadius: 9999,
+                  }}
+                >
+                  <Text style={{ fontSize: 16, lineHeight: 20, marginRight: 6 }}>
+                    {suggestion.emoji}
+                  </Text>
+                  <Text variant="bodySmall" color="textPrimary" fontFamily="Inter_500Medium">
+                    {suggestion.text}
+                  </Text>
+                </LinearGradient>
               </Box>
             </Touchable>
           ))}

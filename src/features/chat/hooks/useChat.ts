@@ -2,7 +2,8 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useChatStore } from '@/stores/chatStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useAuthStore } from '@/stores/authStore';
-import { useSendMessage, useChatMessages, useUserMemory } from './useChatMessages';
+import { useSendMessage, useChatMessages, useUserMemory, useChats } from './useChatMessages';
+import { chatService } from '../services/chatService';
 import { type ChatMessageUI } from '@/types/common';
 import { type ChatMessage } from '@/types/database';
 
@@ -19,6 +20,7 @@ function toUIMessage(dbMsg: ChatMessage): ChatMessageUI {
     createdAt: new Date(dbMsg.created_at),
     user: dbMsg.role === 'assistant' ? AI_USER : { _id: CURRENT_USER_ID },
     image: dbMsg.image_url ?? undefined,
+    toolCallHint: dbMsg.tool_call_hint ?? undefined,
   };
 }
 
@@ -33,20 +35,27 @@ export function useChat() {
     isStreaming,
     weeklyMessageCount,
     weeklyMessageLimit,
+    selectedProvider,
+    selectedModel,
     setStreaming,
     incrementMessageCount,
     canSendMessage,
     setUserMemory,
+    setSelectedProvider,
+    activeChatId,
+    setActiveChatId,
   } = useChatStore();
 
   const [localMessages, setLocalMessages] = useState<ChatMessageUI[]>([]);
-  const { data: dbMessages, isLoading: isLoadingHistory } = useChatMessages();
+  const { data: dbMessages, isLoading: isLoadingHistory } = useChatMessages(activeChatId);
+  const { data: chats } = useChats();
   const { data: memoryMd } = useUserMemory();
   const sendMessageMutation = useSendMessage();
+  const isMidSendRef = useRef(false);
 
-  // Sync DB messages to local state
+  // Sync DB messages to local state (but not while we're mid-send to avoid overwriting optimistic messages)
   useEffect(() => {
-    if (dbMessages) {
+    if (dbMessages && dbMessages.length > 0 && !isMidSendRef.current) {
       setLocalMessages(dbMessages.map(toUIMessage));
     }
   }, [dbMessages]);
@@ -66,10 +75,13 @@ export function useChat() {
   const handleSend = useCallback(
     async (messages: ChatMessageUI[]) => {
       const message = messages[0];
-      if (!message || !userId) return;
+      if (!message) return;
+
+      console.log('[useChat] handleSend called:', message.text?.substring(0, 50));
 
       // Check freemium limit
       if (!isPremium && !canSendMessage()) {
+        console.log('[useChat] Message blocked by freemium limit');
         return { blocked: true };
       }
 
@@ -85,17 +97,33 @@ export function useChat() {
       setLocalMessages((prev) => [userMsg, ...prev]);
       incrementMessageCount();
       setStreaming(true);
+      isMidSendRef.current = true;
+      console.log('[useChat] Streaming set to true, calling sendMessage...');
 
       try {
+        let currentChatId = activeChatId;
+        if (!currentChatId) {
+          if (!userId) throw new Error('User not logged in');
+          const newChat = await chatService.createChat(userId, message.text.substring(0, 30) + '...');
+          currentChatId = newChat.id;
+          setActiveChatId(currentChatId);
+        }
+
         const aiResponse = await sendMessageMutation.mutateAsync({
+          chatId: currentChatId,
           content: message.text,
           imageUrl: message.image,
+          provider: selectedProvider,
+          model: selectedModel,
         });
+
+        console.log('[useChat] AI response received:', aiResponse?.content?.substring(0, 80));
 
         // Add AI response to local state
         const aiMsg = toUIMessage(aiResponse);
         setLocalMessages((prev) => [aiMsg, ...prev]);
-      } catch (error) {
+      } catch (error: any) {
+        console.error('[useChat] handleSend error:', error?.message || error);
         // Add error message
         const errorMsg: ChatMessageUI = {
           _id: `error-${Date.now()}`,
@@ -106,11 +134,16 @@ export function useChat() {
         setLocalMessages((prev) => [errorMsg, ...prev]);
       } finally {
         setStreaming(false);
+        console.log('[useChat] Streaming set to false');
+        // Allow DB sync to overwrite after a short delay so our local AI message renders first
+        setTimeout(() => {
+          isMidSendRef.current = false;
+        }, 2000);
       }
 
       return { blocked: false };
     },
-    [userId, isPremium, canSendMessage, incrementMessageCount, setStreaming, sendMessageMutation]
+    [userId, isPremium, canSendMessage, incrementMessageCount, setStreaming, sendMessageMutation, selectedProvider, selectedModel, activeChatId, setActiveChatId]
   );
 
   /**
@@ -137,9 +170,15 @@ export function useChat() {
     weeklyMessageLimit,
     isPremium,
     showSuggestions,
+    selectedProvider,
+    selectedModel,
+    setSelectedProvider,
     isSending: sendMessageMutation.isPending,
     handleSend,
     handleSuggestedQuestion,
     canSendMessage: isPremium || canSendMessage(),
+    chats: chats ?? [],
+    activeChatId,
+    setActiveChatId,
   };
 }

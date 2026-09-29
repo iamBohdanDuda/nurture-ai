@@ -24,6 +24,27 @@ const palette = {
   lavender300: '#B794F4',
   lavender400: '#9F7AEA',
 
+  // Warm Accents — Peach, Coral, Gold, Mint
+  peach50: '#FFF8F0',
+  peach100: '#FFECD2',
+  peach200: '#FFD8A8',
+  peach300: '#FFB87A',
+  coral50: '#FFF0ED',
+  coral100: '#FFE0D6',
+  coral200: '#FFC4B4',
+  coral300: '#FFA08E',
+  coral400: '#FF7F6E',
+  gold50: '#FFFDF0',
+  gold100: '#FFF8E1',
+  gold200: '#FFECB3',
+  gold300: '#FFD54F',
+  gold400: '#FFB74D',
+  mint50: '#F0FDFA',
+  mint100: '#E0F7FA',
+  mint200: '#B2EBF2',
+  mint300: '#80DEEA',
+  mint400: '#4DB6AC',
+
   // Neutrals
   white: '#FFFFFF',
   gray50: '#FAFAFA',
@@ -47,6 +68,29 @@ const palette = {
   transparent: 'transparent',
 };
 
+/** Type for expo-linear-gradient colors prop */
+export type GradientColors = readonly [string, string, ...string[]];
+
+/** Gradient presets used across the app (expo-linear-gradient `colors` prop) */
+export const GRADIENTS: Record<string, GradientColors> = {
+  primary: [palette.blushPink400, palette.coral400],
+  header: [palette.blushPink300, palette.peach200],
+  headerSubtle: [palette.blushPink50, palette.peach50],
+  gold: [palette.gold300, palette.gold400],
+  sage: [palette.sage300, palette.sage400],
+  lavender: [palette.lavender200, palette.lavender400],
+  info: [palette.mint300, palette.info],
+  coral: [palette.coral300, palette.coral400],
+  progress: [palette.blushPink400, palette.coral300],
+  warmBackground: [palette.blushPink50, palette.peach50, palette.white],
+};
+
+/** Helper to cast inline color arrays to GradientColors for expo-linear-gradient */
+export function gc(c1: string, c2: string, ...rest: string[]): GradientColors {
+  return [c1, c2, ...rest];
+}
+
+
 const theme = createTheme({
   colors: {
     // Surface
@@ -54,6 +98,7 @@ const theme = createTheme({
     cardBackground: palette.gray50,
     mainBackground: palette.blushPink50,
     surfaceElevated: palette.white,
+    surfaceFrosted: 'rgba(255,255,255,0.78)',
 
     // Brand
     primary: palette.blushPink400,
@@ -63,6 +108,17 @@ const theme = createTheme({
     secondaryLight: palette.sage100,
     accent: palette.lavender300,
     accentLight: palette.lavender100,
+
+    // Warm Accents
+    peach: palette.peach200,
+    peachLight: palette.peach100,
+    peachSubtle: palette.peach50,
+    coral: palette.coral400,
+    coralLight: palette.coral100,
+    gold: palette.gold400,
+    goldLight: palette.gold100,
+    mint: palette.mint400,
+    mintLight: palette.mint100,
 
     // Text
     textPrimary: palette.gray800,
@@ -123,6 +179,7 @@ const theme = createTheme({
     m: 12,
     l: 16,
     xl: 24,
+    '2xl': 32,
     full: 9999,
   },
 
@@ -131,6 +188,12 @@ const theme = createTheme({
       fontFamily: 'Inter_400Regular',
       fontSize: 16,
       lineHeight: 24,
+      color: 'textPrimary',
+    },
+    displayLarge: {
+      fontFamily: 'Inter_700Bold',
+      fontSize: 40,
+      lineHeight: 48,
       color: 'textPrimary',
     },
     h1: {
@@ -187,6 +250,19 @@ const theme = createTheme({
       lineHeight: 20,
       color: 'textPrimary',
     },
+    statValue: {
+      fontFamily: 'Inter_700Bold',
+      fontSize: 28,
+      lineHeight: 34,
+      color: 'textPrimary',
+    },
+    statLabel: {
+      fontFamily: 'Inter_500Medium',
+      fontSize: 11,
+      lineHeight: 14,
+      letterSpacing: 0.5,
+      color: 'textMuted',
+    },
   },
 
   breakpoints: {
@@ -226,6 +302,18 @@ const theme = createTheme({
       backgroundColor: 'cardBackground',
       borderRadius: 'l',
       padding: 'm',
+    },
+    glass: {
+      backgroundColor: 'surfaceFrosted',
+      borderRadius: 'xl',
+      padding: 'm',
+      borderWidth: 1,
+      borderColor: 'border',
+      shadowColor: 'shadow',
+      shadowOpacity: 0.06,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 16,
+      elevation: 3,
     },
   },
 });

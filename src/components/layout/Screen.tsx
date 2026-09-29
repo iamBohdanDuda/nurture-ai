@@ -11,6 +11,7 @@ interface ScreenProps {
   padded?: boolean;
   safeTop?: boolean;
   safeBottom?: boolean;
+  hasTabBar?: boolean;
   backgroundColor?: keyof Theme['colors'];
   style?: ViewStyle;
 }
@@ -21,6 +22,7 @@ export function Screen({
   padded = true,
   safeTop = true,
   safeBottom = true,
+  hasTabBar = true,
   backgroundColor = 'mainBackground',
   style,
 }: ScreenProps) {
@@ -31,9 +33,11 @@ export function Screen({
     flex: 1,
     backgroundColor: theme.colors[backgroundColor],
     paddingTop: safeTop ? insets.top : 0,
-    paddingBottom: safeBottom ? insets.bottom : 0,
+    paddingBottom: (!hasTabBar && safeBottom) ? insets.bottom : 0,
     ...style,
   };
+
+  const extraBottomPadding = hasTabBar ? 100 + insets.bottom : (safeBottom ? insets.bottom : 0);
 
   const content = (
     <Box flex={1} paddingHorizontal={padded ? 'm' : '0'}>
@@ -48,7 +52,7 @@ export function Screen({
     >
       {scrollable ? (
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: extraBottomPadding }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { TextInput, Keyboard } from 'react-native';
 import { useTheme } from '@shopify/restyle';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Box, Text } from '@/theme/restyleComponents';
 import { Button } from '@/components/ui/Button';
 import { useTrackingStore } from '@/stores/trackingStore';
 import { trackingService } from '../services/trackingService';
 import { useAuthStore } from '@/stores/authStore';
-import { type Theme } from '@/theme/theme';
+import { type Theme, GRADIENTS } from '@/theme/theme';
 
 import { usePregnancyWeek } from '@/hooks/usePregnancyWeek';
 
@@ -38,9 +39,40 @@ export function WeightLogger() {
   };
 
   return (
-    <Card variant="elevated" marginBottom="m">
+    <Card
+      variant="elevated"
+      marginBottom="m"
+      style={{ borderRadius: 20, overflow: 'hidden' }}
+    >
+      <LinearGradient
+        colors={[theme.colors.surfaceElevated, theme.colors.coralLight]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 20 }}
+      />
+
       <Box flexDirection="row" alignItems="center" marginBottom="s">
-        <Ionicons name="scale" size={24} color={theme.colors.primary} />
+        <Box
+          width={36}
+          height={36}
+          borderRadius="full"
+          alignItems="center"
+          justifyContent="center"
+          style={{ overflow: 'hidden' }}
+        >
+          <LinearGradient
+            colors={GRADIENTS.coral}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Ionicons name="scale" size={18} color="#FFFFFF" />
+          </LinearGradient>
+        </Box>
         <Text variant="h3" marginLeft="s">Weight Log</Text>
       </Box>
       <Text variant="bodySmall" color="textSecondary" marginBottom="m">
@@ -57,6 +89,8 @@ export function WeightLogger() {
           borderRadius="m"
           paddingHorizontal="m"
           marginRight="s"
+          backgroundColor="surfaceFrosted"
+          style={{ borderRadius: 14 }}
         >
           <TextInput
             style={{
@@ -85,9 +119,21 @@ export function WeightLogger() {
       </Box>
 
       {todayWeight !== null && (
-        <Text variant="caption" color="success" marginTop="s">
-          ✓ Logged today: {todayWeight} kg
-        </Text>
+        <Box
+          flexDirection="row"
+          alignItems="center"
+          marginTop="s"
+          backgroundColor="secondaryLight"
+          borderRadius="full"
+          paddingHorizontal="m"
+          paddingVertical="xs"
+          alignSelf="flex-start"
+        >
+          <Ionicons name="checkmark-circle" size={16} color={theme.colors.secondary} />
+          <Text variant="caption" color="secondary" fontFamily="Inter_600SemiBold" marginLeft="xs">
+            Logged today: {todayWeight} kg
+          </Text>
+        </Box>
       )}
     </Card>
   );

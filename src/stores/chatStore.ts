@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { asyncStorage } from './middleware/asyncStorage';
 import { STORAGE_KEYS, FREE_MESSAGE_LIMIT } from '@/core/constants';
-import { type ChatMessageUI } from '@/types/common';
+import { type ChatMessageUI, type AIProvider } from '@/types/common';
 
 interface ChatState {
   messages: ChatMessageUI[];
@@ -11,14 +11,19 @@ interface ChatState {
   weeklyMessageLimit: number;
   userMemoryMd: string;
   weekStartTimestamp: number;
+  selectedProvider: AIProvider;
+  selectedModel: string;
+  activeChatId: string | null;
 
   // Actions
   addMessage: (message: ChatMessageUI) => void;
   setMessages: (messages: ChatMessageUI[]) => void;
+  setActiveChatId: (id: string | null) => void;
   setStreaming: (streaming: boolean) => void;
   incrementMessageCount: () => void;
   resetWeeklyCount: () => void;
   setUserMemory: (md: string) => void;
+  setSelectedProvider: (provider: AIProvider, model?: string) => void;
   canSendMessage: () => boolean;
   clearMessages: () => void;
 }
@@ -30,6 +35,8 @@ const getWeekStart = () => {
   return new Date(now.setDate(diff)).setHours(0, 0, 0, 0);
 };
 
+const DEFAULT_GEMINI_MODEL = process.env.EXPO_PUBLIC_GEMINI_MODEL || 'gemini-3.1-flash-lite';
+
 export const useChatStore = create<ChatState>()(
   persist(
     (set, get) => ({
@@ -39,6 +46,9 @@ export const useChatStore = create<ChatState>()(
       weeklyMessageLimit: FREE_MESSAGE_LIMIT,
       userMemoryMd: 'No history yet.',
       weekStartTimestamp: getWeekStart(),
+      selectedProvider: 'gemini',
+      selectedModel: DEFAULT_GEMINI_MODEL,
+      activeChatId: null,
 
       addMessage: (message) =>
         set((state) => ({
@@ -46,6 +56,8 @@ export const useChatStore = create<ChatState>()(
         })),
 
       setMessages: (messages) => set({ messages }),
+
+      setActiveChatId: (id) => set({ activeChatId: id }),
 
       setStreaming: (isStreaming) => set({ isStreaming }),
 
@@ -68,6 +80,11 @@ export const useChatStore = create<ChatState>()(
 
       setUserMemory: (userMemoryMd) => set({ userMemoryMd }),
 
+      setSelectedProvider: (provider, model) => {
+        const defaultModel = provider === 'gemini' ? (process.env.EXPO_PUBLIC_GEMINI_MODEL || 'gemini-3.1-flash-lite') : 'gpt-4o-mini';
+        set({ selectedProvider: provider, selectedModel: model || defaultModel });
+      },
+
       canSendMessage: () => {
         const state = get();
         const currentWeekStart = getWeekStart();
@@ -84,7 +101,15 @@ export const useChatStore = create<ChatState>()(
         weeklyMessageCount: state.weeklyMessageCount,
         weekStartTimestamp: state.weekStartTimestamp,
         userMemoryMd: state.userMemoryMd,
+        selectedProvider: state.selectedProvider,
+        selectedModel: state.selectedModel,
+        activeChatId: state.activeChatId,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state && (state.selectedModel === 'gemini-2.5-pro' || !state.selectedModel)) {
+          state.setSelectedProvider(state.selectedProvider || 'gemini', DEFAULT_GEMINI_MODEL);
+        }
+      },
     }
   )
 );

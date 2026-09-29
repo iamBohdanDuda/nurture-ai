@@ -1,7 +1,7 @@
 import { type Session } from '@supabase/supabase-js';
 
 // Re-export database types
-export type { User, ChatMessage, HealthMetric, Reminder } from './database';
+export type { User, ChatMessage, Reminder } from './database';
 
 // Navigation
 export type RootStackParamList = {
@@ -38,6 +38,9 @@ export interface OnboardingData {
 }
 
 // Chat
+export type AIProvider = 'openai' | 'gemini';
+export type AIModel = 'gpt-4o-mini' | 'gemini-3.1-flash-lite' | string;
+
 export interface ChatMessageUI {
   _id: string;
   text: string;
@@ -49,6 +52,9 @@ export interface ChatMessageUI {
   };
   image?: string;
   pending?: boolean;
+  provider?: AIProvider;
+  model?: AIModel | string;
+  toolCallHint?: string;
 }
 
 // Pregnancy

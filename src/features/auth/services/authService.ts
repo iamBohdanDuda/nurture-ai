@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/authStore';
 
 export const authService = {
   async signInWithEmail(email: string, password: string) {
+    console.log(`[DB: authService] SIGN IN with email: ${email}`);
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -13,6 +14,7 @@ export const authService = {
   },
 
   async signUpWithEmail(email: string, password: string) {
+    console.log(`[DB: authService] SIGN UP with email: ${email}`);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -22,6 +24,7 @@ export const authService = {
   },
 
   async signOut() {
+    console.log(`[DB: authService] SIGN OUT`);
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   },
@@ -33,6 +36,7 @@ export const authService = {
   },
 
   async getUserProfile(userId: string): Promise<User | null> {
+    console.log(`[DB: authService] SELECT from users (user: ${userId})`);
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -74,6 +78,7 @@ export const authService = {
   },
 
   async updateUserProfile(userId: string, updates: Partial<User>) {
+    console.log(`[DB: authService] UPDATE users (user: ${userId})`);
     try {
       const { data, error } = await supabase
         .from('users')
@@ -109,6 +114,7 @@ export const authService = {
   },
 
   async initUserMemory(userId: string) {
+    console.log(`[DB: authService] INSERT into user_memory (user: ${userId})`);
     const { error } = await supabase
       .from('user_memory')
       .upsert({
@@ -119,8 +125,8 @@ export const authService = {
   },
 
   async deleteAccount(userId: string) {
+    console.log(`[DB: authService] DELETE ALL user data (user: ${userId})`);
     try {
-      await supabase.from('health_metrics').delete().eq('user_id', userId);
       await supabase.from('chat_history').delete().eq('user_id', userId);
       await supabase.from('user_memory').delete().eq('user_id', userId);
       await supabase.from('users').delete().eq('id', userId);

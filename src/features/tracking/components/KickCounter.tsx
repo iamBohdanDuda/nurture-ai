@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@shopify/restyle';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Box, Text } from '@/theme/restyleComponents';
 import { Button } from '@/components/ui/Button';
@@ -8,7 +9,7 @@ import { useTrackingStore } from '@/stores/trackingStore';
 import { trackingService } from '../services/trackingService';
 import { useAuthStore } from '@/stores/authStore';
 import { usePregnancyWeek } from '@/hooks/usePregnancyWeek';
-import { type Theme } from '@/theme/theme';
+import { type Theme, GRADIENTS } from '@/theme/theme';
 
 export function KickCounter() {
   const theme = useTheme<Theme>();
@@ -73,58 +74,109 @@ export function KickCounter() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const isGoalReached = kickCount >= 10;
+
   return (
-    <Card variant="elevated" marginBottom="m">
+    <Card
+      variant="elevated"
+      marginBottom="m"
+      style={{ borderRadius: 20, overflow: 'hidden' }}
+    >
+      {/* Subtle background gradient */}
+      <LinearGradient
+        colors={[
+          theme.colors.surfaceElevated,
+          isGoalReached ? theme.colors.secondaryLight : theme.colors.peachSubtle,
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 20 }}
+      />
+
       <Box flexDirection="row" alignItems="center" justifyContent="space-between" marginBottom="s">
         <Box flexDirection="row" alignItems="center">
           <Text style={{ fontSize: 24, lineHeight: 30, marginRight: 8 }}>🦶</Text>
           <Text variant="h3">Kick Counter</Text>
         </Box>
-        <Text variant="caption" color="textMuted">
-          Target: 10–12 kicks
-        </Text>
+        <Box
+          backgroundColor={isGoalReached ? 'secondaryLight' : 'coralLight'}
+          paddingHorizontal="m"
+          paddingVertical="xs"
+          borderRadius="full"
+        >
+          <Text
+            variant="statLabel"
+            color={isGoalReached ? 'secondary' : 'coral'}
+            style={{ textTransform: 'uppercase' }}
+          >
+            TARGET: 10–12
+          </Text>
+        </Box>
       </Box>
 
       <Text variant="bodySmall" color="textSecondary" marginBottom="m">
-        Count your baby's movements. 10 to 12 kicks in a 2-hour window is considered standard & healthy 🟢.
+        Count your baby's movements. 10–12 kicks in 2 hours is healthy 🟢
       </Text>
 
-      {/* Main Interactive Kick Button */}
-      <Box alignItems="center" my="s">
-        <Touchable onPress={handleTapKick} activeScale={0.92}>
+      {/* Large Pulsing Kick Button */}
+      <Box alignItems="center" my="m">
+        <Touchable onPress={handleTapKick} activeScale={0.88}>
           <Box
-            width={120}
-            height={120}
+            width={130}
+            height={130}
             borderRadius="full"
-            backgroundColor={kickCount >= 10 ? 'secondaryLight' : 'primaryLight'}
-            borderWidth={3}
-            borderColor={kickCount >= 10 ? 'secondary' : 'primary'}
             alignItems="center"
             justifyContent="center"
-            style={{
-              shadowColor: theme.colors.primary,
-              shadowOpacity: 0.15,
-              shadowOffset: { width: 0, height: 4 },
-              shadowRadius: 10,
-              elevation: 4,
-            }}
+            style={{ overflow: 'hidden' }}
           >
-            <Text variant="h1" color={kickCount >= 10 ? 'secondary' : 'primary'} style={{ fontSize: 36 }}>
-              {kickCount}
-            </Text>
-            <Text variant="caption" color="textSecondary" marginTop="xs">
-              TAP TO COUNT
-            </Text>
+            <LinearGradient
+              colors={
+                isGoalReached
+                  ? (['#48BB78', '#68D391'])
+                  : (GRADIENTS.primary)
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                width: 130,
+                height: 130,
+                borderRadius: 65,
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: isGoalReached
+                  ? theme.colors.secondary
+                  : theme.colors.primary,
+                shadowOpacity: 0.3,
+                shadowOffset: { width: 0, height: 6 },
+                shadowRadius: 16,
+                elevation: 8,
+              }}
+            >
+              <Text variant="displayLarge" color="textInverse" style={{ fontSize: 42 }}>
+                {kickCount}
+              </Text>
+              <Text variant="statLabel" color="textInverse" style={{ opacity: 0.85 }}>
+                TAP TO COUNT
+              </Text>
+            </LinearGradient>
           </Box>
         </Touchable>
       </Box>
 
       {/* Live Session Timer & Controls */}
       {kickCount > 0 && (
-        <Box alignItems="center" marginTop="m">
-          <Text variant="body" fontFamily="Inter_600SemiBold" color="textPrimary" marginBottom="s">
-            Session Time: {formatTimer(seconds)}
-          </Text>
+        <Box alignItems="center" marginTop="s">
+          <Box
+            backgroundColor="peachSubtle"
+            borderRadius="full"
+            paddingHorizontal="l"
+            paddingVertical="s"
+            marginBottom="m"
+          >
+            <Text variant="body" fontFamily="Inter_600SemiBold" color="textPrimary">
+              ⏱ {formatTimer(seconds)}
+            </Text>
+          </Box>
 
           <Box flexDirection="row" gap="s" width="100%">
             <Box flex={1}>
@@ -147,7 +199,7 @@ export function KickCounter() {
         </Box>
       )}
 
-      {/* Recent Kick Sessions History Timeline */}
+      {/* Recent Kick Sessions History */}
       {kickLogs.length > 0 && (
         <Box marginTop="m" paddingTop="m" borderTopWidth={1} borderColor="border">
           <Text variant="label" marginBottom="s" color="textSecondary">
@@ -160,8 +212,8 @@ export function KickCounter() {
                 flexDirection="row"
                 justifyContent="space-between"
                 alignItems="center"
-                backgroundColor="inputBackground"
-                borderRadius="s"
+                backgroundColor="peachSubtle"
+                borderRadius="m"
                 paddingHorizontal="m"
                 paddingVertical="s"
               >

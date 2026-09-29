@@ -14,8 +14,8 @@ export const queryClient = new QueryClient({
 // Query key factory — consistent keys for AI agent use
 export const queryKeys = {
   user: (id: string) => ['user', id] as const,
-  chat: (userId: string) => ['chat', userId] as const,
-  chatMessages: (userId: string, page?: number) => ['chat', 'messages', userId, page] as const,
+  chats: (userId: string) => ['chats', userId] as const,
+  chatMessages: (userId: string, chatId: string | null, page?: number) => ['chat', 'messages', userId, chatId, page] as const,
   metrics: (userId: string, type?: string) => ['metrics', userId, type] as const,
   reminders: (userId: string) => ['reminders', userId] as const,
   memory: (userId: string) => ['memory', userId] as const,

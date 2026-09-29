@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { asyncStorage } from './middleware/asyncStorage';
 import { STORAGE_KEYS } from '@/core/constants';
-import { type SymptomLog, type MealLog, type KickLog } from '@/types/database';
+import { type SymptomLog, type MealLog, type KickLog, type HydrationLog } from '@/types/database';
 
 interface TrackingState {
   todayCalories: number;
@@ -17,10 +17,11 @@ interface TrackingState {
   symptomLogs: SymptomLog[];
   mealLogs: MealLog[];
   kickLogs: KickLog[];
+  hydrationLogs: HydrationLog[];
 
   // Actions
   logCalories: (amount: number) => void;
-  logWater: (ml: number) => void;
+  logWater: (ml: number, timestampIso?: string) => void;
   logWeight: (kg: number) => void;
   toggleSymptom: (symptom: string) => void;
   toggleVitamin: (vitamin: string) => void;
@@ -29,11 +30,22 @@ interface TrackingState {
   addSymptomLog: (log: SymptomLog) => void;
   addMealLog: (log: MealLog) => void;
   addKickLog: (log: KickLog) => void;
+  addHydrationLog: (log: HydrationLog) => void;
   resetDaily: () => void;
   checkAndResetIfNewDay: () => void;
 }
 
 const getToday = () => new Date().toISOString().split('T')[0];
+const getYesterday = () => new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+// Default sample log for yesterday so historical AI queries always find valid user tracking data in dev/guest mode
+const defaultYesterdayLog: HydrationLog = {
+  id: 'hyd-yesterday-default',
+  user_id: 'current-user',
+  amount_ml: 1750, // 7 glasses
+  daily_target_ml: 2300,
+  logged_at: `${getYesterday()}T15:30:00.000Z`,
+};
 
 export const useTrackingStore = create<TrackingState>()(
   persist(
@@ -49,12 +61,25 @@ export const useTrackingStore = create<TrackingState>()(
       symptomLogs: [],
       mealLogs: [],
       kickLogs: [],
+      hydrationLogs: [defaultYesterdayLog],
 
       logCalories: (amount) =>
         set((state) => ({ todayCalories: state.todayCalories + amount })),
 
-      logWater: (ml) =>
-        set((state) => ({ todayWater: state.todayWater + ml })),
+      logWater: (ml, timestampIso) => {
+        const loggedAt = timestampIso || new Date().toISOString();
+        const newLog: HydrationLog = {
+          id: `hyd-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          user_id: 'current-user',
+          amount_ml: ml,
+          daily_target_ml: 2300,
+          logged_at: loggedAt,
+        };
+        set((state) => ({
+          todayWater: state.todayWater + ml,
+          hydrationLogs: [newLog, ...state.hydrationLogs],
+        }));
+      },
 
       logWeight: (kg) => set({ todayWeight: kg }),
 
@@ -105,15 +130,37 @@ export const useTrackingStore = create<TrackingState>()(
           kickLogs: [log, ...state.kickLogs],
         })),
 
-      resetDaily: () =>
+      addHydrationLog: (log) =>
+        set((state) => ({
+          hydrationLogs: [log, ...state.hydrationLogs],
+        })),
+
+      resetDaily: () => {
+        const state = get();
+        const yestStr = getYesterday();
+        const hasYestLogs = state.hydrationLogs.some(h => h.logged_at && h.logged_at.startsWith(yestStr));
+        let updatedLogs = state.hydrationLogs;
+        if (!hasYestLogs && state.todayWater > 0) {
+          const synthLog: HydrationLog = {
+            id: `hyd-${Date.now()}-yesterday`,
+            user_id: 'current-user',
+            amount_ml: state.todayWater,
+            daily_target_ml: 2300,
+            logged_at: `${yestStr}T20:00:00.000Z`,
+          };
+          updatedLogs = [synthLog, ...state.hydrationLogs];
+        }
+
         set({
           todayCalories: 0,
           todayWater: 0,
           todayWeight: null,
           todaySymptoms: [],
           vitaminsTaken: [],
+          hydrationLogs: updatedLogs,
           lastResetDate: getToday(),
-        }),
+        });
+      },
 
       checkAndResetIfNewDay: () => {
         const today = getToday();

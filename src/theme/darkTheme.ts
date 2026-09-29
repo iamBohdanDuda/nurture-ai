@@ -9,6 +9,7 @@ const darkTheme: Theme = createTheme({
     cardBackground: '#1A1A1A',
     mainBackground: '#0A0A0A',
     surfaceElevated: '#1E1E1E',
+    surfaceFrosted: 'rgba(30,30,30,0.78)',
 
     textPrimary: '#F5F5F5',
     textSecondary: '#A3A3A3',
@@ -19,6 +20,12 @@ const darkTheme: Theme = createTheme({
     borderFocused: '#F687B3',
     inputBackground: '#262626',
     inputPlaceholder: '#525252',
+
+    peachLight: '#2A1F14',
+    peachSubtle: '#1A1510',
+    coralLight: '#2A1814',
+    goldLight: '#2A2514',
+    mintLight: '#142A28',
 
     tabBarBackground: '#0F0F0F',
 
