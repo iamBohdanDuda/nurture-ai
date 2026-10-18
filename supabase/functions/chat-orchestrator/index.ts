@@ -5,6 +5,8 @@ const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 // @ts-ignore
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
 // @ts-ignore
+const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY');
+// @ts-ignore
 const DEFAULT_GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') || 'gemini-3.1-flash-lite';
 
 const corsHeaders = {
@@ -20,10 +22,66 @@ Deno.serve(async (req: Request) => {
 
   try {
     const body = await req.json();
-    const { messages, message, user_id, provider = 'gemini', model = DEFAULT_GEMINI_MODEL, health_context } = body;
+    const { messages, message, user_id, provider = 'gemini', model = DEFAULT_GEMINI_MODEL, health_context, user_memory } = body;
+
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
+    const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || '';
+
+    // Pull user memory if not provided in payload
+    let activeUserMemory = user_memory;
+    if (!activeUserMemory && user_id && SUPABASE_URL && SUPABASE_ANON_KEY) {
+      try {
+        const memRes = await fetch(`${SUPABASE_URL}/rest/v1/user_memory?user_id=eq.${user_id}&select=markdown_summary`, {
+          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+        });
+        const memData = await memRes.json();
+        if (memData?.[0]?.markdown_summary) {
+          activeUserMemory = memData[0].markdown_summary;
+        }
+      } catch (memErr) {
+        console.warn('Could not fetch user memory from edge:', memErr);
+      }
+    }
 
     let baseSystemPrompt = `You are NurtureAI, an expert, empathetic, and medically-accurate pregnancy assistant. You offer supportive advice based on standard prenatal guidelines. You do not replace a doctor. Always end medical advice with a disclaimer to consult a healthcare provider if symptoms are severe. Do not greet the user if the last message in the chat history was sent today. Keep your messages concise, not overly detailed and long.`;
     
+    const cleanMemory = activeUserMemory && activeUserMemory !== 'No history yet.' && activeUserMemory !== 'No notes recorded yet.'
+      ? activeUserMemory.trim()
+      : '';
+
+    if (cleanMemory) {
+      baseSystemPrompt += `\n\n[IMPORTANT USER NOTES & PERSISTENT MEMORY]:\n${cleanMemory}\nAlways respect and tailor your guidance around these known user facts (e.g. allergies, previous conditions, trimester/due date, preferences, symptoms, family context).`;
+    } else {
+      baseSystemPrompt += `\n\n[IMPORTANT USER NOTES & PERSISTENT MEMORY]:\nNo notes recorded yet.`;
+    }
+
+    baseSystemPrompt += `\n\n[MEMORY MANAGEMENT]:
+You possess persistent memory across conversations. You MUST actively remember and update important notes about the user.
+Whenever the user shares important personal information, asks you to remember something, or whenever you decide a detail is significant for maternal or fetal care—such as:
+- Gestational age, due date, trimester, pregnancy milestones, singleton or multiples
+- Medical history, chronic conditions, high-risk flags (e.g. preeclampsia, gestational diabetes, hypertension, thyroid)
+- Allergies, medications, prenatal vitamins
+- Dietary preferences or restrictions (e.g. vegan, gluten-free, foods that trigger nausea)
+- Lifestyle, exercise routine, work environment, partner or family details, previous pregnancies/children
+- Recurring symptoms, emotional well-being, birth plan wishes
+- Any explicit request: "Remember that...", "Note that...", "I am...", "Don't forget..."
+
+You SHOULD update these notes when you decide new information is important!
+To update notes:
+- If function/tool calling is supported, call the \`update_user_notes\` tool with the updated markdown summary of all notes.
+- You can also format your update by including:
+  <update_notes>
+  ## User Profile
+  - ...
+  ## Medical & Safety
+  - ...
+  ## Preferences & Lifestyle
+  - ...
+  ## Ongoing Symptoms
+  - ...
+  </update_notes>
+Always organize notes in clear markdown with bullet points. Merge new details into existing notes without erasing previously known important facts.`;
+
     if (health_context) {
       baseSystemPrompt += `\n\nRecent Health Context:\n${typeof health_context === 'string' ? health_context : JSON.stringify(health_context)}`;
     }
@@ -39,7 +97,11 @@ Deno.serve(async (req: Request) => {
       throw new Error('Missing message or messages array');
     }
 
-    const activeProvider = (provider === 'gemini' && GEMINI_API_KEY) || !OPENAI_API_KEY ? 'gemini' : provider;
+    const activeProvider = provider === 'groq'
+      ? 'groq'
+      : provider === 'openai' && OPENAI_API_KEY
+      ? 'openai'
+      : 'gemini';
     let reply = '';
 
     let toolCallHint: string | undefined;
@@ -83,6 +145,28 @@ Deno.serve(async (req: Request) => {
                 },
                 required: ['log_type']
               }
+            },
+            {
+              name: 'update_user_notes',
+              description: 'Save, update, or append important persistent notes about the user (e.g. allergies, medical conditions, due date/trimester, dietary restrictions, medications, preferences, symptoms, baby names, previous children/pregnancies). Call this whenever the user shares new personal facts, asks you to remember something, or when you decide a detail is vital to remember for future care.',
+              parameters: {
+                type: 'OBJECT',
+                properties: {
+                  notes: {
+                    type: 'STRING',
+                    description: 'The complete updated markdown notes summary about the user to retain for all future conversations.'
+                  }
+                },
+                required: ['notes']
+              }
+            },
+            {
+              name: 'get_user_notes',
+              description: 'Retrieve the current saved persistent notes and memory about the user.',
+              parameters: {
+                type: 'OBJECT',
+                properties: {}
+              }
             }
           ]
         }
@@ -119,16 +203,12 @@ Deno.serve(async (req: Request) => {
         const callName = functionCallPart.functionCall.name;
         const args = functionCallPart.functionCall.args || {};
         
-        const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
-        const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || '';
         let toolResultData: any = { error: 'Not implemented' };
 
         if (callName === 'get_health_data_by_date') {
           const targetDate = args.date || new Date().toISOString().split('T')[0];
           toolCallHint = `Checked health logs for ${targetDate}`;
           
-          // Basic fetch for kicks as an example, but ideally we'd fetch all just like local client
-          // For simplicity in edge, we'll fetch kicks and weight
           const startIso = `${targetDate}T00:00:00.000Z`;
           const endIso = `${targetDate}T23:59:59.999Z`;
           
@@ -166,6 +246,39 @@ Deno.serve(async (req: Request) => {
             });
             toolResultData = { logs: await res.json() };
           }
+        } else if (callName === 'update_user_notes') {
+          const updatedNotes = args.notes || '';
+          toolCallHint = 'Updated memory notes';
+          try {
+            await fetch(`${SUPABASE_URL}/rest/v1/user_memory`, {
+              method: 'POST',
+              headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'resolution=merge-duplicates'
+              },
+              body: JSON.stringify({
+                user_id,
+                markdown_summary: updatedNotes,
+                last_updated: new Date().toISOString()
+              })
+            });
+            toolResultData = { status: 'success', message: 'User notes successfully updated in persistent memory.' };
+          } catch (err: any) {
+            toolResultData = { status: 'error', message: err?.message || 'Failed to update memory notes' };
+          }
+        } else if (callName === 'get_user_notes') {
+          toolCallHint = 'Checked memory notes';
+          try {
+            const memRes = await fetch(`${SUPABASE_URL}/rest/v1/user_memory?user_id=eq.${user_id}&select=markdown_summary`, {
+              headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+            });
+            const memData = await memRes.json();
+            toolResultData = { status: 'success', notes: memData?.[0]?.markdown_summary || 'No notes recorded yet.' };
+          } catch (err: any) {
+            toolResultData = { status: 'error', message: 'Failed to retrieve notes' };
+          }
         }
 
         const secondPayload = {
@@ -196,6 +309,40 @@ Deno.serve(async (req: Request) => {
       if (!reply) {
         throw new Error('No response text received from Gemini');
       }
+    } else if (activeProvider === 'groq') {
+      if (!GROQ_API_KEY) {
+        throw new Error('Server not configured with GROQ_API_KEY.');
+      }
+
+      const groqMessages = [
+        { role: 'system', content: baseSystemPrompt },
+        ...rawMessages.map((m: any) => ({
+          role: m.role === 'assistant' ? 'assistant' : m.role,
+          content: m.content || m.text || ''
+        }))
+      ];
+
+      const groqModel = model || 'openai/gpt-oss-120b';
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: groqModel,
+          messages: groqMessages,
+          max_tokens: 800,
+          temperature: 0.7
+        }),
+      });
+
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(`Groq Error: ${data.error.message || JSON.stringify(data.error)}`);
+      }
+
+      reply = data.choices[0].message.content;
     } else {
       if (!OPENAI_API_KEY) {
         throw new Error('Server not configured with OPENAI_API_KEY.');
@@ -232,6 +379,34 @@ Deno.serve(async (req: Request) => {
       reply = data.choices[0].message.content;
     }
 
+    // Tag fallback: detect and extract <update_notes> from reply
+    const updateNotesMatch = reply.match(/<update_notes>([\s\S]*?)<\/update_notes>/i);
+    if (updateNotesMatch) {
+      const extractedNotes = updateNotesMatch[1].trim();
+      reply = reply.replace(/<update_notes>[\s\S]*?<\/update_notes>/gi, '').trim();
+      toolCallHint = 'Updated memory notes';
+      if (user_id && SUPABASE_URL && SUPABASE_ANON_KEY) {
+        try {
+          await fetch(`${SUPABASE_URL}/rest/v1/user_memory`, {
+            method: 'POST',
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'resolution=merge-duplicates'
+            },
+            body: JSON.stringify({
+              user_id,
+              markdown_summary: extractedNotes,
+              last_updated: new Date().toISOString()
+            })
+          });
+        } catch (memErr) {
+          console.warn('Could not save extracted notes from edge:', memErr);
+        }
+      }
+    }
+
     return new Response(
       JSON.stringify({
         reply,
@@ -245,7 +420,11 @@ Deno.serve(async (req: Request) => {
           tool_call_hint: toolCallHint ?? null,
           created_at: new Date().toISOString(),
           provider: activeProvider,
-          model: activeProvider === 'gemini' ? (model || DEFAULT_GEMINI_MODEL) : (model || 'gpt-4o-mini'),
+          model: activeProvider === 'gemini'
+            ? (model || DEFAULT_GEMINI_MODEL)
+            : activeProvider === 'groq'
+            ? (model || 'openai/gpt-oss-120b')
+            : (model || 'gpt-4o-mini'),
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

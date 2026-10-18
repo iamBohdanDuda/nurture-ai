@@ -5,7 +5,17 @@ export const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000,
       gcTime: 10 * 60 * 1000,
-      retry: 2,
+      retry: (failureCount, error: any) => {
+        // Prevent retrying repeatedly on network/DNS errors (host unreachable)
+        if (
+          error?.message?.includes('Network request failed') ||
+          error?.message?.includes('Failed to fetch') ||
+          failureCount >= 2
+        ) {
+          return false;
+        }
+        return true;
+      },
       refetchOnWindowFocus: false,
     },
   },

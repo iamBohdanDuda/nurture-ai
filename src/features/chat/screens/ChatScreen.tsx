@@ -12,6 +12,7 @@ import { TypingIndicator } from '../components/TypingIndicator';
 import { SuggestedQuestions } from '../components/SuggestedQuestions';
 import { MessageLimitBanner } from '../components/MessageLimitBanner';
 import { AIProviderSelector } from '../components/AIProviderSelector';
+import { UserMemoryModal } from '../components/UserMemoryModal';
 import { useChat } from '../hooks/useChat';
 import { type Theme, GRADIENTS } from '@/theme/theme';
 import { type ChatMessageUI } from '@/types/common';
@@ -59,10 +60,15 @@ export function ChatScreen() {
     chats,
     activeChatId,
     setActiveChatId,
+    deleteChat,
+    userMemory,
+    updateUserMemory,
+    isUpdatingMemory,
   } = useChat();
 
   const [inputText, setInputText] = useState('');
   const [isChatListVisible, setChatListVisible] = useState(false);
+  const [isMemoryModalVisible, setMemoryModalVisible] = useState(false);
 
   const giftedMessages = messages.map(toGiftedMessage);
 
@@ -182,16 +188,14 @@ export function ChatScreen() {
     >
       <Box flex={1} backgroundColor="mainBackground">
         {/* Premium Header with gradient */}
-        <Box
-          style={{ overflow: 'hidden' }}
-        >
+        <Box style={{ overflow: 'hidden' }}>
         <LinearGradient
-          colors={GRADIENTS.header}
+          colors={GRADIENTS.primary}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
             paddingTop: Math.max(insets.top + 8, 24),
-            paddingBottom: 12,
+            paddingBottom: 14,
             paddingHorizontal: 16,
           }}
         >
@@ -199,83 +203,177 @@ export function ChatScreen() {
             <Box flexDirection="row" alignItems="center" flex={1}>
               {/* AI Avatar */}
               <Box
-                width={42}
-                height={42}
+                width={44}
+                height={44}
                 borderRadius="full"
-                backgroundColor="surfaceFrosted"
+                backgroundColor="surfaceElevated"
                 alignItems="center"
                 justifyContent="center"
                 marginRight="s"
                 style={{
                   shadowColor: '#000',
-                  shadowOpacity: 0.1,
+                  shadowOpacity: 0.15,
                   shadowOffset: { width: 0, height: 2 },
-                  shadowRadius: 4,
+                  shadowRadius: 5,
+                  elevation: 3,
                 }}
               >
                 <Text style={{ fontSize: 24, lineHeight: 30 }}>🤱</Text>
               </Box>
               <Box flex={1}>
-                <Text variant="h3" color="textInverse">NurtureAI</Text>
-                <Box flexDirection="row" alignItems="center">
+                <Text
+                  variant="h3"
+                  style={{
+                    color: '#FFFFFF',
+                    fontWeight: '700',
+                    textShadowColor: 'rgba(0, 0, 0, 0.15)',
+                    textShadowOffset: { width: 0, height: 1 },
+                    textShadowRadius: 2,
+                  }}
+                >
+                  NurtureAI
+                </Text>
+                <Box flexDirection="row" alignItems="center" marginTop="xs">
                   <Box
                     width={8}
                     height={8}
                     borderRadius="full"
                     backgroundColor={isStreaming ? 'warning' : 'secondary'}
                     marginRight="xs"
+                    style={{
+                      shadowColor: '#48BB78',
+                      shadowOpacity: 0.6,
+                      shadowRadius: 3,
+                    }}
                   />
-                  <Text variant="caption" color="textInverse" style={{ opacity: 0.85 }}>
+                  <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '500', opacity: 0.95 }}>
                     {isStreaming ? 'Typing...' : 'Online'}
                   </Text>
                 </Box>
               </Box>
             </Box>
             
-            <TouchableOpacity onPress={() => setChatListVisible(true)}>
-              <Box
-                padding="s"
-                backgroundColor="surfaceFrosted"
-                borderRadius="full"
+            {/* Header Right Buttons: Memory & Previous Chats */}
+            <Box flexDirection="row" alignItems="center" gap="s">
+              {/* AI Memory Notes Button */}
+              <TouchableOpacity
+                onPress={() => setMemoryModalVisible(true)}
+                activeOpacity={0.8}
+                accessibilityLabel="View AI Memory Notes"
               >
-                <Ionicons name="menu" size={24} color="#FFF" />
-              </Box>
-            </TouchableOpacity>
+                <Box
+                  height={40}
+                  paddingHorizontal="m"
+                  borderRadius="full"
+                  backgroundColor="surfaceElevated"
+                  flexDirection="row"
+                  alignItems="center"
+                  justifyContent="center"
+                  style={{
+                    shadowColor: '#000',
+                    shadowOpacity: 0.12,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowRadius: 4,
+                    elevation: 2,
+                  }}
+                >
+                  <Ionicons name="sparkles" size={15} color={theme.colors.primary} style={{ marginRight: 5 }} />
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: theme.colors.primary }}>
+                    Memory
+                  </Text>
+                </Box>
+              </TouchableOpacity>
+
+              {/* Previous Chats Menu Button */}
+              <TouchableOpacity
+                onPress={() => setChatListVisible(true)}
+                activeOpacity={0.8}
+                accessibilityLabel="Open Previous Chats Menu"
+              >
+                <Box
+                  width={40}
+                  height={40}
+                  borderRadius="full"
+                  backgroundColor="surfaceElevated"
+                  alignItems="center"
+                  justifyContent="center"
+                  style={{
+                    shadowColor: '#000',
+                    shadowOpacity: 0.12,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowRadius: 4,
+                    elevation: 2,
+                  }}
+                >
+                  <Ionicons name="menu" size={22} color={theme.colors.primary} />
+                </Box>
+              </TouchableOpacity>
+            </Box>
           </Box>
 
-          {/* AI Provider Switcher (Gemini 2.5 Pro vs OpenAI) */}
+          {/* AI Provider Switcher (Gemini vs OpenAI) */}
           <AIProviderSelector
             selectedProvider={selectedProvider}
             selectedModel={selectedModel}
             onSelectProvider={setSelectedProvider}
           />
 
-          {/* Inline message limit progress */}
+          {/* Inline message limit progress card */}
           {!isPremium && (
-            <Box marginTop="s">
+            <Box
+              marginTop="s"
+              paddingHorizontal="m"
+              paddingVertical="s"
+              borderRadius="m"
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.15)',
+                borderWidth: 1,
+                borderColor: 'rgba(255, 255, 255, 0.25)',
+              }}
+            >
               <Box
                 flexDirection="row"
                 justifyContent="space-between"
                 alignItems="center"
                 marginBottom="xs"
               >
-                <Text variant="caption" color="textInverse" style={{ opacity: 0.7 }}>
-                  {weeklyMessageCount}/{weeklyMessageLimit} messages this week
-                </Text>
+                <Box flexDirection="row" alignItems="center">
+                  <Ionicons name="chatbubbles-outline" size={13} color="#FFFFFF" style={{ marginRight: 6 }} />
+                  <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '600' }}>
+                    {weeklyMessageCount}/{weeklyMessageLimit} messages this week
+                  </Text>
+                </Box>
+                {weeklyMessageCount >= weeklyMessageLimit ? (
+                  <Box
+                    backgroundColor="surfaceElevated"
+                    paddingHorizontal="s"
+                    borderRadius="full"
+                    style={{ paddingVertical: 2 }}
+                  >
+                    <Text style={{ color: '#E53E3E', fontSize: 10, fontWeight: '700' }}>
+                      Limit Reached
+                    </Text>
+                  </Box>
+                ) : (
+                  <Text style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: 11, fontWeight: '500' }}>
+                    {Math.max(0, weeklyMessageLimit - weeklyMessageCount)} left
+                  </Text>
+                )}
               </Box>
               <Box
                 width="100%"
-                height={4}
-                backgroundColor="surfaceFrosted"
+                height={5}
                 borderRadius="full"
                 overflow="hidden"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.3)' }}
               >
                 <Box
-                  height={4}
+                  height={5}
                   borderRadius="full"
-                  backgroundColor="textInverse"
-                  width={`${limitPercent}%`}
-                  style={{ opacity: 0.6 }}
+                  style={{
+                    width: `${limitPercent}%`,
+                    backgroundColor: weeklyMessageCount >= weeklyMessageLimit ? '#FEB2B2' : '#FFFFFF',
+                  }}
                 />
               </Box>
             </Box>
@@ -386,34 +484,149 @@ export function ChatScreen() {
               </Box>
             </TouchableOpacity>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {chats.map(chat => (
-                <TouchableOpacity
-                  key={chat.id}
-                  onPress={() => {
-                    setActiveChatId(chat.id);
-                    setChatListVisible(false);
-                  }}
-                >
-                  <Box 
-                    padding="m" 
-                    borderBottomWidth={1} 
-                    borderColor="border"
-                    backgroundColor={activeChatId === chat.id ? 'surfaceElevated' : 'transparent'}
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+              {chats.length === 0 ? (
+                <Box alignItems="center" justifyContent="center" paddingVertical="xl" paddingHorizontal="m">
+                  <Box
+                    width={56}
+                    height={56}
+                    borderRadius="full"
+                    backgroundColor="accentLight"
+                    alignItems="center"
+                    justifyContent="center"
+                    marginBottom="m"
                   >
-                    <Text variant="body" fontFamily={activeChatId === chat.id ? 'Inter_600SemiBold' : 'Inter_400Regular'}>
-                      {chat.title}
-                    </Text>
-                    <Text variant="caption" color="textMuted" marginTop="xs">
-                      {new Date(chat.created_at).toLocaleDateString()}
-                    </Text>
+                    <Ionicons name="chatbubbles-outline" size={28} color={theme.colors.accent} />
                   </Box>
-                </TouchableOpacity>
-              ))}
+                  <Text variant="body" fontFamily="Inter_600SemiBold" color="textPrimary" textAlign="center">
+                    No Previous Chats Yet
+                  </Text>
+                  <Text variant="bodySmall" color="textMuted" textAlign="center" marginTop="xs">
+                    Your conversations with NurtureAI are saved here so you can revisit them anytime.
+                  </Text>
+                </Box>
+              ) : (
+                chats.map((chat) => {
+                  const isActive = activeChatId === chat.id;
+                  const chatDate = new Date(chat.created_at);
+                  const isToday = new Date().toDateString() === chatDate.toDateString();
+                  const timeFormatted = chatDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                  const dateFormatted = isToday ? `Today · ${timeFormatted}` : `${chatDate.toLocaleDateString()} · ${timeFormatted}`;
+
+                  return (
+                    <Box
+                      key={chat.id}
+                      flexDirection="row"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      paddingVertical="s"
+                      paddingHorizontal="m"
+                      marginBottom="xs"
+                      borderRadius="m"
+                      backgroundColor={isActive ? 'surfaceElevated' : 'transparent'}
+                      borderWidth={isActive ? 1 : 0}
+                      borderColor="borderFocused"
+                    >
+                      <TouchableOpacity
+                        style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}
+                        onPress={() => {
+                          setActiveChatId(chat.id);
+                          setChatListVisible(false);
+                        }}
+                      >
+                        <Box
+                          width={38}
+                          height={38}
+                          borderRadius="full"
+                          backgroundColor={isActive ? 'primaryLight' : 'inputBackground'}
+                          alignItems="center"
+                          justifyContent="center"
+                          marginRight="m"
+                        >
+                          <Ionicons
+                            name="chatbubble-ellipses-outline"
+                            size={18}
+                            color={isActive ? theme.colors.primaryDark : theme.colors.textMuted}
+                          />
+                        </Box>
+
+                        <Box flex={1} marginRight="s">
+                          <Box flexDirection="row" alignItems="center">
+                            <Text
+                              variant="body"
+                              fontFamily={isActive ? 'Inter_600SemiBold' : 'Inter_500Medium'}
+                              color={isActive ? 'primary' : 'textPrimary'}
+                              numberOfLines={1}
+                              style={{ flexShrink: 1 }}
+                            >
+                              {chat.title}
+                            </Text>
+                            {isActive && (
+                              <Box
+                                backgroundColor="primaryLight"
+                                paddingHorizontal="xs"
+                                paddingVertical="0"
+                                borderRadius="s"
+                                marginLeft="xs"
+                              >
+                                <Text style={{ fontSize: 10, color: theme.colors.primaryDark, fontWeight: '700' }}>
+                                  Active
+                                </Text>
+                              </Box>
+                            )}
+                          </Box>
+                          <Text variant="caption" color="textMuted" marginTop="xs">
+                            {dateFormatted}
+                          </Text>
+                        </Box>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={() => {
+                          Alert.alert(
+                            'Delete Chat',
+                            'Are you sure you want to delete this chat session? This cannot be undone.',
+                            [
+                              { text: 'Cancel', style: 'cancel' },
+                              {
+                                text: 'Delete',
+                                style: 'destructive',
+                                onPress: async () => {
+                                  try {
+                                    await deleteChat(chat.id);
+                                    if (activeChatId === chat.id) {
+                                      setActiveChatId(null);
+                                    }
+                                  } catch (err) {
+                                    console.warn('Failed to delete chat:', err);
+                                  }
+                                },
+                              },
+                            ]
+                          );
+                        }}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        style={{ padding: 4 }}
+                      >
+                        <Ionicons name="trash-outline" size={18} color={theme.colors.textMuted} />
+                      </TouchableOpacity>
+                    </Box>
+                  );
+                })
+              )}
             </ScrollView>
           </Box>
         </Box>
       </Modal>
+
+      {/* Persistent AI Memory & Notes Modal */}
+      <UserMemoryModal
+        isVisible={isMemoryModalVisible}
+        onClose={() => setMemoryModalVisible(false)}
+        userMemory={userMemory}
+        onSaveMemory={updateUserMemory}
+        isSaving={isUpdatingMemory}
+      />
     </Box>
   </KeyboardAvoidingView>
   );

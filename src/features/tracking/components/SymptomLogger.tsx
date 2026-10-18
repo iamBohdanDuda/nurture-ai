@@ -10,6 +10,7 @@ import { trackingService } from '../services/trackingService';
 import { useAuthStore } from '@/stores/authStore';
 import { usePregnancyWeek } from '@/hooks/usePregnancyWeek';
 import { type Theme } from '@/theme/theme';
+import { formatLogTimestamp } from '@/utils/date';
 
 const COMMON_SYMPTOMS = [
   { name: 'Nausea 🤢', bg: '#FFF5F7', border: '#FBB6CE' },
@@ -236,7 +237,7 @@ export function SymptomLogger() {
                   </Box>
                 </Box>
                 <Text variant="caption" color="textMuted">
-                  {new Date(log.logged_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {formatLogTimestamp(log.logged_at)}
                 </Text>
               </Box>
             ))}

@@ -12,6 +12,7 @@ import { useTrackingStore } from '@/stores/trackingStore';
 import { trackingService } from '../services/trackingService';
 import { useAuthStore } from '@/stores/authStore';
 import { type Theme, GRADIENTS } from '@/theme/theme';
+import { formatLogTimestamp } from '@/utils/date';
 
 export function MealScanner() {
   const theme = useTheme<Theme>();
@@ -229,7 +230,7 @@ export function MealScanner() {
                     </Box>
                   </Box>
                   <Text variant="caption" color="textMuted">
-                    {new Date(meal.logged_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {formatLogTimestamp(meal.logged_at)}
                   </Text>
                 </Box>
                 {meal.description && (
@@ -269,7 +270,7 @@ export function MealScanner() {
                     </Text>
                   </Box>
                   <Text variant="caption" color="textMuted">
-                    {new Date(meal.logged_at).toLocaleDateString([], { month: 'short', day: 'numeric' })} {new Date(meal.logged_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {formatLogTimestamp(meal.logged_at)}
                   </Text>
                 </Box>
                 <Box

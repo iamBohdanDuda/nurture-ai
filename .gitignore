@@ -35,3 +35,5 @@ tsc_errors.txt
 # Temporary / Patch files
 *.orig.*
 *.rej
+
+.agents/

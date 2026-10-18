@@ -12,6 +12,7 @@ export default function ModalsLayout() {
       <Stack.Screen name="paywall" />
       <Stack.Screen name="pregnancy-card" />
       <Stack.Screen name="settings" />
+      <Stack.Screen name="calendar" />
     </Stack>
   );
 }

@@ -38,8 +38,8 @@ export interface OnboardingData {
 }
 
 // Chat
-export type AIProvider = 'openai' | 'gemini';
-export type AIModel = 'gpt-4o-mini' | 'gemini-3.1-flash-lite' | string;
+export type AIProvider = 'openai' | 'gemini' | 'groq';
+export type AIModel = 'gpt-4o-mini' | 'gemini-3.1-flash-lite' | 'openai/gpt-oss-120b' | string;
 
 export interface ChatMessageUI {
   _id: string;

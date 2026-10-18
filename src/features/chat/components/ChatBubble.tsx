@@ -14,13 +14,33 @@ export function ChatBubble(props: BubbleProps<IMessage>) {
   const theme = useTheme<Theme>();
   const toolHint = (props.currentMessage as any)?.toolCallHint;
   const isAI = props.currentMessage?.user?._id !== 'current-user';
+  const isMemoryHint = toolHint?.toLowerCase().includes('memory') || toolHint?.toLowerCase().includes('notes');
 
   return (
     <View style={{ flex: 1 }}>
       {isAI && !!toolHint && (
-        <View style={styles.hintPill}>
-          <Ionicons name="build-outline" size={11} color={theme.colors.textMuted} style={{ marginRight: 4 }} />
-          <RNText style={[styles.hintText, { color: theme.colors.textMuted }]}>
+        <View
+          style={[
+            styles.hintPill,
+            isMemoryHint && {
+              backgroundColor: theme.colors.primaryLight || '#FED7E2',
+              borderColor: 'rgba(213, 63, 140, 0.2)',
+              borderWidth: 1,
+            },
+          ]}
+        >
+          <Ionicons
+            name={isMemoryHint ? 'sparkles' : 'build-outline'}
+            size={11}
+            color={isMemoryHint ? (theme.colors.primaryDark || '#D53F8C') : theme.colors.textMuted}
+            style={{ marginRight: 4 }}
+          />
+          <RNText
+            style={[
+              styles.hintText,
+              { color: isMemoryHint ? (theme.colors.primaryDark || '#D53F8C') : theme.colors.textMuted },
+            ]}
+          >
             {toolHint}
           </RNText>
         </View>
@@ -83,6 +103,6 @@ const styles = StyleSheet.create({
   hintText: {
     fontSize: 11,
     fontFamily: 'Inter_400Regular',
-    fontWeight: '500',
+    fontWeight: '600',
   },
 });

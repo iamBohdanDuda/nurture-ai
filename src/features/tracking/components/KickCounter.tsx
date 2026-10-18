@@ -10,6 +10,7 @@ import { trackingService } from '../services/trackingService';
 import { useAuthStore } from '@/stores/authStore';
 import { usePregnancyWeek } from '@/hooks/usePregnancyWeek';
 import { type Theme, GRADIENTS } from '@/theme/theme';
+import { formatLogTimestamp } from '@/utils/date';
 
 export function KickCounter() {
   const theme = useTheme<Theme>();
@@ -224,7 +225,7 @@ export function KickCounter() {
                   </Text>
                 </Box>
                 <Text variant="caption" color="textMuted">
-                  {new Date(log.logged_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {formatLogTimestamp(log.logged_at)}
                 </Text>
               </Box>
             ))}

@@ -5,6 +5,7 @@ export { ChatInputBar } from './components/ChatInputBar';
 export { TypingIndicator } from './components/TypingIndicator';
 export { SuggestedQuestions } from './components/SuggestedQuestions';
 export { MessageLimitBanner } from './components/MessageLimitBanner';
+export { UserMemoryModal } from './components/UserMemoryModal';
 export { useChat } from './hooks/useChat';
-export { useChatMessages, useSendMessage, useUserMemory } from './hooks/useChatMessages';
+export { useChatMessages, useSendMessage, useUserMemory, useUpdateUserMemory } from './hooks/useChatMessages';
 export { chatService } from './services/chatService';

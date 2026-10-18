@@ -36,16 +36,6 @@ interface TrackingState {
 }
 
 const getToday = () => new Date().toISOString().split('T')[0];
-const getYesterday = () => new Date(Date.now() - 86400000).toISOString().split('T')[0];
-
-// Default sample log for yesterday so historical AI queries always find valid user tracking data in dev/guest mode
-const defaultYesterdayLog: HydrationLog = {
-  id: 'hyd-yesterday-default',
-  user_id: 'current-user',
-  amount_ml: 1750, // 7 glasses
-  daily_target_ml: 2300,
-  logged_at: `${getYesterday()}T15:30:00.000Z`,
-};
 
 export const useTrackingStore = create<TrackingState>()(
   persist(
@@ -61,7 +51,7 @@ export const useTrackingStore = create<TrackingState>()(
       symptomLogs: [],
       mealLogs: [],
       kickLogs: [],
-      hydrationLogs: [defaultYesterdayLog],
+      hydrationLogs: [],
 
       logCalories: (amount) =>
         set((state) => ({ todayCalories: state.todayCalories + amount })),
@@ -137,19 +127,8 @@ export const useTrackingStore = create<TrackingState>()(
 
       resetDaily: () => {
         const state = get();
-        const yestStr = getYesterday();
-        const hasYestLogs = state.hydrationLogs.some(h => h.logged_at && h.logged_at.startsWith(yestStr));
-        let updatedLogs = state.hydrationLogs;
-        if (!hasYestLogs && state.todayWater > 0) {
-          const synthLog: HydrationLog = {
-            id: `hyd-${Date.now()}-yesterday`,
-            user_id: 'current-user',
-            amount_ml: state.todayWater,
-            daily_target_ml: 2300,
-            logged_at: `${yestStr}T20:00:00.000Z`,
-          };
-          updatedLogs = [synthLog, ...state.hydrationLogs];
-        }
+        // Remove any synthetic yesterday logs from previous bug, keep authentic logs
+        const cleanLogs = (state.hydrationLogs || []).filter((h) => !h.id.includes('yesterday'));
 
         set({
           todayCalories: 0,
@@ -157,7 +136,7 @@ export const useTrackingStore = create<TrackingState>()(
           todayWeight: null,
           todaySymptoms: [],
           vitaminsTaken: [],
-          hydrationLogs: updatedLogs,
+          hydrationLogs: cleanLogs,
           lastResetDate: getToday(),
         });
       },
@@ -172,6 +151,13 @@ export const useTrackingStore = create<TrackingState>()(
     {
       name: STORAGE_KEYS.TRACKING,
       storage: createJSONStorage(() => asyncStorage),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.hydrationLogs = (state.hydrationLogs || []).filter(
+            (h) => !h.id.includes('yesterday')
+          );
+        }
+      },
     }
   )
 );

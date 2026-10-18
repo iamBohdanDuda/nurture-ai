@@ -254,6 +254,7 @@ export const trackingService = {
       const hydrationByDate: Record<string, { total_ml: number; entries_count: number }> = {};
 
       allHydration.forEach((item) => {
+        if (item.id && item.id.includes('yesterday')) return;
         const dateStr = item.logged_at ? item.logged_at.split('T')[0] : todayStr;
         if (!hydrationByDate[dateStr]) {
           hydrationByDate[dateStr] = { total_ml: 0, entries_count: 0 };

@@ -63,7 +63,7 @@ export function HomeScreen() {
               </Text>
             </Box>
             <Touchable
-              onPress={() => router.push('/(modals)/settings' as any)}
+              onPress={() => router.push('/(modals)/calendar' as any)}
               activeScale={0.9}
             >
               <Box
@@ -74,7 +74,7 @@ export function HomeScreen() {
                 alignItems="center"
                 justifyContent="center"
               >
-                <Ionicons name="notifications-outline" size={22} color={theme.colors.textPrimary} />
+                <Ionicons name="calendar-outline" size={22} color={theme.colors.textPrimary} />
               </Box>
             </Touchable>
           </Box>

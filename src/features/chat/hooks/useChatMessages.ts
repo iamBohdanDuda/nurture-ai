@@ -74,6 +74,49 @@ export function useSendMessage() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.chats(userId),
       });
+      if (
+        data?.tool_call_hint?.toLowerCase().includes('memory') ||
+        data?.tool_call_hint?.toLowerCase().includes('notes')
+      ) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.memory(userId),
+        });
+      }
     },
   });
 }
+
+/**
+ * Mutation hook for updating persistent user memory notes.
+ */
+export function useUpdateUserMemory() {
+  const queryClient = useQueryClient();
+  const userId = useAuthStore((s) => s.user?.id) || 'current-user';
+
+  return useMutation({
+    mutationFn: (notes: string) => chatService.updateUserMemory(userId, notes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.memory(userId),
+      });
+    },
+  });
+}
+
+/**
+ * Mutation hook for deleting a chat session.
+ */
+export function useDeleteChat() {
+  const queryClient = useQueryClient();
+  const userId = useAuthStore((s) => s.user?.id) || 'current-user';
+
+  return useMutation({
+    mutationFn: (chatId: string) => chatService.deleteChat(userId, chatId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chats(userId),
+      });
+    },
+  });
+}
+

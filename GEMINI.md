@@ -3,9 +3,7 @@
 This file (`GEMINI.md`) is used to define custom, persistent rules and instructions for your AI coding assistant. Any instructions you place in this file will automatically be read and strictly followed across all conversations within this workspace.
 
 ## Custom AI Rules & Coding Standards
-*Add your project-specific rules, architectural preferences, or formatting guidelines below this line.*
-
-- Example: "Always use double quotes for strings."
+- **RESTRICT ACCESS TO .ENV**: The AI assistant MUST NEVER read, open, view, grep, search, or print the contents of `.env` or any file containing secret API keys or credentials. Treat `.env` as strictly confidential and restricted. Never disclose or inspect secrets.
 - Example: "Ensure all React components use function declarations, not arrow functions."
 
 ---

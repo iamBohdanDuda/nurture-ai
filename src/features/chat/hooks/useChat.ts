@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useChatStore } from '@/stores/chatStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useAuthStore } from '@/stores/authStore';
-import { useSendMessage, useChatMessages, useUserMemory, useChats } from './useChatMessages';
+import { useSendMessage, useChatMessages, useUserMemory, useUpdateUserMemory, useChats, useDeleteChat } from './useChatMessages';
 import { chatService } from '../services/chatService';
 import { type ChatMessageUI } from '@/types/common';
 import { type ChatMessage } from '@/types/database';
@@ -35,6 +35,7 @@ export function useChat() {
     isStreaming,
     weeklyMessageCount,
     weeklyMessageLimit,
+    userMemoryMd,
     selectedProvider,
     selectedModel,
     setStreaming,
@@ -51,14 +52,18 @@ export function useChat() {
   const { data: chats } = useChats();
   const { data: memoryMd } = useUserMemory();
   const sendMessageMutation = useSendMessage();
+  const deleteChatMutation = useDeleteChat();
+  const updateUserMemoryMutation = useUpdateUserMemory();
   const isMidSendRef = useRef(false);
 
-  // Sync DB messages to local state (but not while we're mid-send to avoid overwriting optimistic messages)
+  // Sync messages when activeChatId or dbMessages changes
   useEffect(() => {
-    if (dbMessages && dbMessages.length > 0 && !isMidSendRef.current) {
+    if (!activeChatId) {
+      setLocalMessages([]);
+    } else if (dbMessages && !isMidSendRef.current) {
       setLocalMessages(dbMessages.map(toUIMessage));
     }
-  }, [dbMessages]);
+  }, [activeChatId, dbMessages]);
 
   // Sync memory markdown
   useEffect(() => {
@@ -66,6 +71,23 @@ export function useChat() {
       setUserMemory(memoryMd);
     }
   }, [memoryMd, setUserMemory]);
+
+  // Auto-preserve active chat session locally if messages exist
+  useEffect(() => {
+    if (activeChatId && localMessages.length > 0) {
+      const userMsg = localMessages.find((m) => m.user._id === CURRENT_USER_ID);
+      const title = userMsg?.text
+        ? userMsg.text.substring(0, 34).trim() + (userMsg.text.length > 34 ? '...' : '')
+        : 'Pregnancy Consultation';
+      chatService.saveLocalChat(userId || 'current-user', {
+        id: activeChatId,
+        user_id: userId || 'current-user',
+        title,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    }
+  }, [activeChatId, localMessages.length, userId]);
 
   const showSuggestions = localMessages.length === 0 && !isLoadingHistory;
 
@@ -103,8 +125,8 @@ export function useChat() {
       try {
         let currentChatId = activeChatId;
         if (!currentChatId) {
-          if (!userId) throw new Error('User not logged in');
-          const newChat = await chatService.createChat(userId, message.text.substring(0, 30) + '...');
+          const effectiveUserId = userId || 'current-user';
+          const newChat = await chatService.createChat(effectiveUserId, message.text.substring(0, 30) + '...');
           currentChatId = newChat.id;
           setActiveChatId(currentChatId);
         }
@@ -118,6 +140,15 @@ export function useChat() {
         });
 
         console.log('[useChat] AI response received:', aiResponse?.content?.substring(0, 80));
+
+        // If AI updated memory notes, sync immediately to store
+        if (
+          aiResponse.tool_call_hint?.toLowerCase().includes('memory') ||
+          aiResponse.tool_call_hint?.toLowerCase().includes('notes')
+        ) {
+          const freshMemory = await chatService.getUserMemory(userId || 'current-user');
+          setUserMemory(freshMemory);
+        }
 
         // Add AI response to local state
         const aiMsg = toUIMessage(aiResponse);
@@ -180,5 +211,9 @@ export function useChat() {
     chats: chats ?? [],
     activeChatId,
     setActiveChatId,
+    deleteChat: deleteChatMutation.mutateAsync,
+    userMemory: memoryMd || userMemoryMd,
+    updateUserMemory: updateUserMemoryMutation.mutateAsync,
+    isUpdatingMemory: updateUserMemoryMutation.isPending,
   };
 }

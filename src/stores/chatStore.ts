@@ -81,7 +81,12 @@ export const useChatStore = create<ChatState>()(
       setUserMemory: (userMemoryMd) => set({ userMemoryMd }),
 
       setSelectedProvider: (provider, model) => {
-        const defaultModel = provider === 'gemini' ? (process.env.EXPO_PUBLIC_GEMINI_MODEL || 'gemini-3.1-flash-lite') : 'gpt-4o-mini';
+        let defaultModel = DEFAULT_GEMINI_MODEL;
+        if (provider === 'groq') {
+          defaultModel = 'openai/gpt-oss-120b';
+        } else if (provider === 'openai') {
+          defaultModel = 'gpt-4o-mini';
+        }
         set({ selectedProvider: provider, selectedModel: model || defaultModel });
       },
 
@@ -106,7 +111,10 @@ export const useChatStore = create<ChatState>()(
         activeChatId: state.activeChatId,
       }),
       onRehydrateStorage: () => (state) => {
-        if (state && (state.selectedModel === 'gemini-2.5-pro' || !state.selectedModel)) {
+        if (state && state.selectedProvider === 'openai') {
+          // Deactivate openai provider and switch to groq with openai/gpt-oss-120b
+          state.setSelectedProvider('groq', 'openai/gpt-oss-120b');
+        } else if (state && (state.selectedModel === 'gemini-2.5-pro' || !state.selectedModel)) {
           state.setSelectedProvider(state.selectedProvider || 'gemini', DEFAULT_GEMINI_MODEL);
         }
       },
