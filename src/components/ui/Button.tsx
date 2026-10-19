@@ -66,6 +66,17 @@ export function Button({
         borderColor={borderColor || (variant === 'ghost' ? 'border' : undefined)}
         width={fullWidth ? '100%' : undefined}
         opacity={disabled ? 0.5 : 1}
+        style={
+          variant === 'primary' && !disabled
+            ? {
+                shadowColor: theme.colors.primary,
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.18,
+                shadowRadius: 8,
+                elevation: 3,
+              }
+            : undefined
+        }
       >
         {icon && <Box marginRight="s">{icon}</Box>}
         <Text variant={textVariant} color={textColor}>

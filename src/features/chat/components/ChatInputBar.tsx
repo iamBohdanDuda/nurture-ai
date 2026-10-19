@@ -37,12 +37,13 @@ export function ChatInputBar({
           {
             backgroundColor: theme.colors.surfaceElevated,
             borderColor: theme.colors.border,
+            borderWidth: 1,
             borderRadius: 28,
-            shadowColor: '#000',
-            shadowOpacity: 0.06,
-            shadowOffset: { width: 0, height: -2 },
-            shadowRadius: 8,
-            elevation: 3,
+            shadowColor: theme.colors.shadow,
+            shadowOpacity: 0.05,
+            shadowOffset: { width: 0, height: 2 },
+            shadowRadius: 10,
+            elevation: 2,
           },
         ]}
       >
@@ -57,14 +58,16 @@ export function ChatInputBar({
               width: 36,
               height: 36,
               borderRadius: 18,
-              backgroundColor: theme.colors.peachSubtle,
+              backgroundColor: theme.colors.warmSurfaceSoft,
+              borderWidth: 1,
+              borderColor: theme.colors.border,
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
             <Ionicons
               name="camera"
-              size={20}
+              size={19}
               color={theme.colors.primary}
             />
           </View>

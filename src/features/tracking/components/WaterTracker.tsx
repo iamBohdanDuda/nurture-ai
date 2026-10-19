@@ -33,16 +33,9 @@ export function WaterTracker() {
     <Card
       variant="elevated"
       marginBottom="m"
-      style={{ borderRadius: 20, overflow: 'hidden' }}
+      padding="m"
+      style={{ borderRadius: 24, backgroundColor: '#FFFFFF' }}
     >
-      {/* Subtle blue gradient background */}
-      <LinearGradient
-        colors={[theme.colors.surfaceElevated, theme.colors.mintLight]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 20 }}
-      />
-
       <Box flexDirection="row" alignItems="center" justifyContent="space-between">
         <Box flex={1}>
           <Box flexDirection="row" alignItems="center" marginBottom="s">
@@ -50,24 +43,13 @@ export function WaterTracker() {
               width={36}
               height={36}
               borderRadius="full"
+              backgroundColor="mintLight"
               alignItems="center"
               justifyContent="center"
-              style={{ overflow: 'hidden' }}
             >
-              <LinearGradient
-                colors={['#63B3ED', '#4299E1']}
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Ionicons name="water" size={18} color="#FFFFFF" />
-              </LinearGradient>
+              <Ionicons name="water" size={19} color={theme.colors.info} />
             </Box>
-            <Text variant="h3" marginLeft="s">Water Intake</Text>
+            <Text variant="h3" marginLeft="s">Daily Hydration</Text>
           </Box>
           <Text variant="bodySmall" color="textSecondary">
             {todayWater} / {DAILY_WATER_GOAL} ml · {glasses} glasses

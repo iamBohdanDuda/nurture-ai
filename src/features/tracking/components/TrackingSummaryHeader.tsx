@@ -60,19 +60,12 @@ export function TrackingSummaryHeader() {
     <Card
       variant="elevated"
       marginBottom="m"
+      padding="l"
       style={{
         borderRadius: 24,
-        overflow: 'hidden',
+        backgroundColor: '#FFFFFF',
       }}
     >
-      {/* Subtle gradient background */}
-      <LinearGradient
-        colors={[theme.colors.surfaceElevated, theme.colors.peachSubtle]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 24 }}
-      />
-
       <Text variant="h3" marginBottom="xs">
         Today's Health Summary
       </Text>
@@ -86,17 +79,17 @@ export function TrackingSummaryHeader() {
           <Box key={metric.label} alignItems="center">
             <ProgressRing
               progress={metric.percent}
-              size={68}
+              size={64}
               strokeWidth={5}
               color={metric.color}
               trackColor={metric.bgColor}
             >
-              <Ionicons name={metric.icon} size={20} color={metric.color} />
+              <Ionicons name={metric.icon} size={18} color={metric.color} />
             </ProgressRing>
-            <Text variant="statLabel" marginTop="xs" style={{ textTransform: 'uppercase' }}>
+            <Text variant="caption" color="textMuted" marginTop="xs" style={{ fontSize: 10, letterSpacing: 0.5, textTransform: 'uppercase' }}>
               {metric.label}
             </Text>
-            <Text variant="caption" fontFamily="Inter_700Bold" color="textPrimary">
+            <Text variant="caption" fontFamily="Inter_700Bold" color="textPrimary" marginTop="0">
               {metric.value}{metric.unit ? ` ${metric.unit}` : ''}
             </Text>
           </Box>

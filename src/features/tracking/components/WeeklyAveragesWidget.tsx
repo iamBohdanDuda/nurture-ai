@@ -80,45 +80,35 @@ export function WeeklyAveragesWidget() {
     <Card
       variant="elevated"
       marginBottom="m"
-      style={{ borderRadius: 20, overflow: 'hidden' }}
+      padding="m"
+      style={{ borderRadius: 24, backgroundColor: '#FFFFFF' }}
     >
-      <LinearGradient
-        colors={[theme.colors.surfaceElevated, theme.colors.primaryLight]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 20 }}
-      />
-
       <Box flexDirection="row" alignItems="center" justifyContent="space-between" marginBottom="m">
         <Box flexDirection="row" alignItems="center">
           <Box
-            width={32}
-            height={32}
+            width={34}
+            height={34}
             borderRadius="full"
+            backgroundColor="primaryLight"
             alignItems="center"
             justifyContent="center"
-            style={{ overflow: 'hidden' }}
           >
-            <LinearGradient
-              colors={GRADIENTS.primary}
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 16,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Ionicons name="stats-chart" size={16} color="#FFFFFF" />
-            </LinearGradient>
+            <Ionicons name="stats-chart" size={16} color={theme.colors.primary} />
           </Box>
           <Text variant="h3" marginLeft="s">7-Day Averages</Text>
         </Box>
-        <GradientBadge preset="primary" style={{ paddingHorizontal: 12, paddingVertical: 4 }}>
-          <Text variant="statLabel" color="textInverse" style={{ textTransform: 'uppercase', letterSpacing: 0.8 }}>
+        <Box
+          backgroundColor="warmSurfaceSoft"
+          paddingHorizontal="m"
+          paddingVertical="xs"
+          borderRadius="full"
+          borderWidth={1}
+          borderColor="border"
+        >
+          <Text variant="caption" color="textMuted" style={{ textTransform: 'uppercase', letterSpacing: 0.8, fontSize: 10 }}>
             THIS WEEK
           </Text>
-        </GradientBadge>
+        </Box>
       </Box>
 
       {/* Grid of 4 Averages */}
@@ -127,20 +117,21 @@ export function WeeklyAveragesWidget() {
           <Box
             key={metric.label}
             width="48%"
-            backgroundColor="surfaceFrosted"
-            borderRadius="l"
-            padding="s"
+            backgroundColor="warmSurfaceSoft"
+            padding="m"
             borderWidth={1}
             borderColor="border"
-            style={{ borderRadius: 14 }}
+            style={{ borderRadius: 16 }}
           >
             <Box flexDirection="row" alignItems="center" marginBottom="xs">
-              <Ionicons name={metric.icon} size={16} color={metric.color} />
-              <Text variant="statLabel" marginLeft="xs">{metric.label}</Text>
+              <Ionicons name={metric.icon} size={15} color={metric.color} />
+              <Text variant="caption" color="textMuted" marginLeft="xs" style={{ fontSize: 11, letterSpacing: 0.3 }}>
+                {metric.label}
+              </Text>
             </Box>
-            <Text variant="h3" color="textPrimary">
+            <Text variant="h3" color="textPrimary" marginTop="xs">
               {metric.value}{' '}
-              {metric.unit ? <Text variant="caption">{metric.unit}</Text> : null}
+              {metric.unit ? <Text variant="caption" color="textMuted">{metric.unit}</Text> : null}
             </Text>
           </Box>
         ))}

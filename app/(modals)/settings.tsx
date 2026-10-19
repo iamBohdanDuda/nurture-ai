@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, Modal, ScrollView } from 'react-native';
+import { Alert, Modal, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@shopify/restyle';
@@ -96,82 +96,158 @@ export default function SettingsScreen() {
 
   return (
     <Screen scrollable={false} padded={false} safeTop={false} backgroundColor="mainBackground">
-      {/* Header */}
+      {/* Top Header */}
       <Box
         paddingHorizontal="m"
         paddingBottom="m"
-        backgroundColor="primaryBackground"
+        backgroundColor="surfaceElevated"
         borderBottomWidth={1}
         borderColor="border"
         flexDirection="row"
         alignItems="center"
-        justifyContent="space-between"
-        style={{ paddingTop: Math.max(insets.top + 8, 24) }}
+        style={{ paddingTop: Math.max(insets.top + 8, 20) }}
       >
-        <Box flexDirection="row" alignItems="center">
-          <Ionicons name="settings-sharp" size={24} color={theme.colors.primary} />
-          <Text variant="h2" marginLeft="s">
-            Settings
-          </Text>
-        </Box>
-        <Touchable onPress={() => router.back()} hitSlop={12}>
+        <Touchable onPress={() => router.back()} hitSlop={12} accessibilityLabel="Close settings">
           <Box
-            width={32}
-            height={32}
+            width={34}
+            height={34}
             borderRadius="full"
-            backgroundColor="inputBackground"
+            backgroundColor="warmSurfaceSoft"
+            borderWidth={1}
+            borderColor="border"
             alignItems="center"
             justifyContent="center"
+            marginRight="m"
           >
             <Ionicons name="close" size={20} color={theme.colors.textPrimary} />
           </Box>
         </Touchable>
-      </Box>
 
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-        {/* Pregnancy Tracker Settings */}
-        <Card variant="elevated">
-          <Box flexDirection="row" alignItems="center" marginBottom="s">
-            <Ionicons name="calendar-outline" size={22} color={theme.colors.primary} />
-            <Text variant="h3" marginLeft="s">
-              Pregnancy Details
+        <Box flexDirection="row" alignItems="center" flex={1}>
+          <Box
+            width={38}
+            height={38}
+            borderRadius="full"
+            backgroundColor="warmSurfaceSoft"
+            borderWidth={1}
+            borderColor="border"
+            alignItems="center"
+            justifyContent="center"
+            marginRight="s"
+          >
+            <Ionicons name="settings" size={20} color={theme.colors.primary} />
+          </Box>
+          <Box>
+            <Text variant="h2" color="textPrimary">
+              Settings
+            </Text>
+            <Text variant="caption" color="textMuted">
+              Preferences & account management
             </Text>
           </Box>
+        </Box>
+      </Box>
 
-          <Box gap="xs" marginBottom="m">
-            <Box flexDirection="row" justifyContent="space-between">
-              <Text variant="bodySmall" color="textSecondary">Pregnancy Start Date:</Text>
-              <Text variant="bodySmall" fontFamily="Inter_600SemiBold">
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          padding: 16,
+          gap: 16,
+          paddingBottom: Math.max(insets.bottom + 24, 32),
+        }}
+      >
+        {/* Pregnancy Tracker Settings Card */}
+        <Card variant="elevated" style={styles.card}>
+          <Box flexDirection="row" alignItems="center" marginBottom="m">
+            <Box
+              width={34}
+              height={34}
+              borderRadius="full"
+              backgroundColor="accentLight"
+              alignItems="center"
+              justifyContent="center"
+              marginRight="s"
+            >
+              <Ionicons name="calendar" size={18} color={theme.colors.accent} />
+            </Box>
+            <Box>
+              <Text variant="h3" color="textPrimary">
+                Pregnancy Details
+              </Text>
+              <Text variant="caption" color="textMuted">
+                Milestone dates & due week tracking
+              </Text>
+            </Box>
+          </Box>
+
+          <Box
+            backgroundColor="mainBackground"
+            borderRadius="l"
+            padding="m"
+            gap="s"
+            marginBottom="m"
+            borderWidth={1}
+            borderColor="border"
+          >
+            <Box flexDirection="row" justifyContent="space-between" alignItems="center">
+              <Text variant="bodySmall" color="textSecondary">Start Date</Text>
+              <Text variant="bodySmall" fontFamily="Inter_600SemiBold" color="textPrimary">
                 {user?.pregnancy_start_date ? formatDate(new Date(user.pregnancy_start_date), 'MMM d, yyyy') : 'Not set'}
               </Text>
             </Box>
-            <Box flexDirection="row" justifyContent="space-between">
-              <Text variant="bodySmall" color="textSecondary">Current Progress:</Text>
-              <Text variant="bodySmall" fontFamily="Inter_600SemiBold">Week {currentWeek}</Text>
+            <Box height={1} backgroundColor="border" />
+            <Box flexDirection="row" justifyContent="space-between" alignItems="center">
+              <Text variant="bodySmall" color="textSecondary">Current Stage</Text>
+              <Box
+                backgroundColor="secondaryLight"
+                borderRadius="full"
+                paddingHorizontal="s"
+                paddingVertical="xs"
+              >
+                <Text variant="caption" fontFamily="Inter_700Bold" color="secondary">
+                  Week {currentWeek}
+                </Text>
+              </Box>
             </Box>
-            <Box flexDirection="row" justifyContent="space-between">
-              <Text variant="bodySmall" color="textSecondary">Estimated Due Date:</Text>
-              <Text variant="bodySmall" fontFamily="Inter_600SemiBold">
-                {dueDate ? formatDate(dueDate, 'MMM d, yyyy') : '—'}
+            <Box height={1} backgroundColor="border" />
+            <Box flexDirection="row" justifyContent="space-between" alignItems="center">
+              <Text variant="bodySmall" color="textSecondary">Estimated Due Date</Text>
+              <Text variant="bodySmall" fontFamily="Inter_600SemiBold" color="primaryDark">
+                {dueDate ? formatDate(dueDate, 'MMMM d, yyyy') : '—'}
               </Text>
             </Box>
           </Box>
 
           <Button
-            title="Change Pregnancy Start Date 🗓️"
+            title="Update Pregnancy Start Date"
             onPress={() => setShowDatePicker(true)}
             variant="outline"
             size="sm"
           />
         </Card>
 
-        {/* Profile Details */}
-        <Card variant="elevated">
-          <Box flexDirection="row" alignItems="center" marginBottom="s">
-            <Ionicons name="person-outline" size={22} color={theme.colors.primary} />
-            <Text variant="h3" marginLeft="s">
-              Account Info
-            </Text>
+        {/* Profile Details Card */}
+        <Card variant="elevated" style={styles.card}>
+          <Box flexDirection="row" alignItems="center" marginBottom="m">
+            <Box
+              width={34}
+              height={34}
+              borderRadius="full"
+              backgroundColor="warmSurfaceSoft"
+              alignItems="center"
+              justifyContent="center"
+              marginRight="s"
+            >
+              <Ionicons name="person" size={18} color={theme.colors.primary} />
+            </Box>
+            <Box>
+              <Text variant="h3" color="textPrimary">
+                Account Profile
+              </Text>
+              <Text variant="caption" color="textMuted">
+                Your personal details
+              </Text>
+            </Box>
           </Box>
 
           <Box gap="m">
@@ -204,50 +280,122 @@ export default function SettingsScreen() {
                 </Box>
               </Box>
             ) : (
-              <Box flexDirection="row" justifyContent="space-between" alignItems="center">
+              <Box
+                backgroundColor="mainBackground"
+                borderRadius="l"
+                padding="m"
+                borderWidth={1}
+                borderColor="border"
+                flexDirection="row"
+                justifyContent="space-between"
+                alignItems="center"
+              >
                 <Box>
-                  <Text variant="caption" color="textMuted">Name</Text>
-                  <Text variant="body" fontFamily="Inter_600SemiBold">{user?.first_name ?? 'Mama'}</Text>
+                  <Text variant="caption" color="textMuted">First Name</Text>
+                  <Text variant="body" fontFamily="Inter_600SemiBold" color="textPrimary">
+                    {user?.first_name ?? 'Mama'}
+                  </Text>
                 </Box>
                 <Touchable onPress={() => setIsEditingName(true)}>
-                  <Text variant="caption" color="primary" fontFamily="Inter_600SemiBold">Edit</Text>
+                  <Box
+                    backgroundColor="warmSurfaceSoft"
+                    paddingHorizontal="m"
+                    paddingVertical="xs"
+                    borderRadius="full"
+                    borderWidth={1}
+                    borderColor="border"
+                  >
+                    <Text variant="caption" color="primary" fontFamily="Inter_600SemiBold">
+                      Edit Name
+                    </Text>
+                  </Box>
                 </Touchable>
               </Box>
             )}
 
-            <Box>
-              <Text variant="caption" color="textMuted">Email</Text>
-              <Text variant="body" fontFamily="Inter_400Regular">{user?.email ?? '—'}</Text>
+            <Box
+              backgroundColor="mainBackground"
+              borderRadius="l"
+              padding="m"
+              borderWidth={1}
+              borderColor="border"
+            >
+              <Text variant="caption" color="textMuted">Account Email</Text>
+              <Text variant="body" fontFamily="Inter_400Regular" color="textPrimary" marginTop="xs">
+                {user?.email ?? '—'}
+              </Text>
             </Box>
           </Box>
         </Card>
 
         {/* Subscription Card */}
-        <Card variant="elevated">
-          <Box flexDirection="row" alignItems="center" marginBottom="s">
-            <Ionicons name="star-outline" size={22} color={theme.colors.primary} />
-            <Text variant="h3" marginLeft="s">
-              Subscription
-            </Text>
-          </Box>
-          <Box flexDirection="row" justifyContent="space-between" alignItems="center" marginBottom="m">
-            <Text variant="bodySmall" color="textSecondary">Current Plan:</Text>
-            <Box backgroundColor={tier === 'premium' ? 'accent' : 'secondaryLight'} borderRadius="full" paddingHorizontal="m" paddingVertical="xs">
-              <Text variant="caption" color={tier === 'premium' ? 'textInverse' : 'secondary'}>
-                {tier === 'premium' ? '✨ Premium' : '🌱 Free Plan'}
+        <Card variant="elevated" style={styles.card}>
+          <Box flexDirection="row" alignItems="center" marginBottom="m">
+            <Box
+              width={34}
+              height={34}
+              borderRadius="full"
+              backgroundColor="peachSubtle"
+              alignItems="center"
+              justifyContent="center"
+              marginRight="s"
+            >
+              <Ionicons name="sparkles" size={18} color={theme.colors.coral} />
+            </Box>
+            <Box>
+              <Text variant="h3" color="textPrimary">
+                Subscription Plan
+              </Text>
+              <Text variant="caption" color="textMuted">
+                Unlock clinical AI and meal scanning
               </Text>
             </Box>
           </Box>
+
+          <Box
+            backgroundColor="mainBackground"
+            borderRadius="l"
+            padding="m"
+            borderWidth={1}
+            borderColor="border"
+            flexDirection="row"
+            justifyContent="space-between"
+            alignItems="center"
+            marginBottom="m"
+          >
+            <Box>
+              <Text variant="caption" color="textMuted">Current Status</Text>
+              <Text variant="body" fontFamily="Inter_700Bold" color="textPrimary" marginTop="xs">
+                {tier === 'premium' ? 'Nurture+ Pro Member' : 'Standard Free Tier'}
+              </Text>
+            </Box>
+            <Box
+              backgroundColor={tier === 'premium' ? 'accentLight' : 'secondaryLight'}
+              borderRadius="full"
+              paddingHorizontal="m"
+              paddingVertical="xs"
+            >
+              <Text
+                variant="caption"
+                fontFamily="Inter_700Bold"
+                color={tier === 'premium' ? 'accent' : 'secondary'}
+                style={{ fontSize: 11 }}
+              >
+                {tier === 'premium' ? 'ACTIVE PRO' : 'FREE'}
+              </Text>
+            </Box>
+          </Box>
+
           <Button
-            title={tier === 'premium' ? 'Manage Subscription' : 'Upgrade to Pro ✨'}
+            title={tier === 'premium' ? 'Manage Subscription' : 'Upgrade to Pro'}
             onPress={() => router.push('/(modals)/paywall')}
             variant={tier === 'premium' ? 'outline' : 'primary'}
             size="sm"
           />
         </Card>
 
-        {/* Sign Out & Account Deletion */}
-        <Box marginTop="m" gap="s">
+        {/* Account Actions */}
+        <Box marginTop="s" gap="s">
           <Button
             title="Sign Out"
             onPress={() => {
@@ -272,17 +420,41 @@ export default function SettingsScreen() {
         onRequestClose={() => setShowDatePicker(false)}
       >
         <Box flex={1} backgroundColor="overlay" justifyContent="flex-end">
+          <TouchableOpacity
+            style={StyleSheet.absoluteFillObject}
+            activeOpacity={1}
+            onPress={() => setShowDatePicker(false)}
+          />
+
           <Box
-            backgroundColor="primaryBackground"
-            borderTopLeftRadius="xl"
-            borderTopRightRadius="xl"
-            padding="m"
+            backgroundColor="surfaceElevated"
+            borderTopLeftRadius="2xl"
+            borderTopRightRadius="2xl"
+            padding="l"
             maxHeight="85%"
+            style={styles.sheetContent}
           >
+            {/* Sheet Handle */}
+            <Box alignItems="center" marginBottom="m">
+              <Box width={36} height={4} borderRadius="full" backgroundColor="border" />
+            </Box>
+
             <Box flexDirection="row" justifyContent="space-between" alignItems="center" marginBottom="m">
-              <Text variant="h3">Select Pregnancy Start Date</Text>
-              <Touchable onPress={() => setShowDatePicker(false)}>
-                <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
+              <Box>
+                <Text variant="h3" color="textPrimary">Select Start Date</Text>
+                <Text variant="caption" color="textMuted">First day of last menstrual period</Text>
+              </Box>
+              <Touchable onPress={() => setShowDatePicker(false)} hitSlop={10}>
+                <Box
+                  width={30}
+                  height={30}
+                  borderRadius="full"
+                  backgroundColor="warmSurfaceSoft"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Ionicons name="close" size={18} color={theme.colors.textPrimary} />
+                </Box>
               </Touchable>
             </Box>
 
@@ -302,7 +474,7 @@ export default function SettingsScreen() {
                 </Box>
                 <Box flex={1}>
                   <Button
-                    title="Save New Date"
+                    title="Save Date"
                     onPress={handleSaveStartDate}
                     loading={isSavingDate}
                     variant="primary"
@@ -316,3 +488,24 @@ export default function SettingsScreen() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 10,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F3E8EC',
+  },
+  sheetContent: {
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: -4 },
+    shadowRadius: 16,
+    elevation: 10,
+  },
+});

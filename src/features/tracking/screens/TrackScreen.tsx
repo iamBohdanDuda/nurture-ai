@@ -21,10 +21,10 @@ import { MealScanner } from '../components/MealScanner';
 import { KickCounter } from '../components/KickCounter';
 
 const TABS = [
-  { id: 'all', label: 'All', icon: '📋' },
-  { id: 'symptoms', label: 'Symptoms', icon: '🤒' },
-  { id: 'meals', label: 'Nutrition', icon: '🥗' },
-  { id: 'kicks', label: 'Kicks & Weight', icon: '🦶' },
+  { id: 'all', label: 'All' },
+  { id: 'symptoms', label: 'Symptoms' },
+  { id: 'meals', label: 'Nutrition' },
+  { id: 'kicks', label: 'Kicks & Weight' },
 ];
 
 export function TrackScreen() {
@@ -48,20 +48,16 @@ export function TrackScreen() {
     <Screen scrollable safeTop padded={false} backgroundColor="mainBackground">
       <Box paddingBottom="l">
         {/* Header */}
-        <Animated.View entering={FadeInDown.duration(400).delay(100)}>
-          <Box paddingHorizontal="m" marginBottom="m">
-            <Text variant="h2" marginBottom="xs">Health & Wellness Hub</Text>
-            {/* Gradient accent line */}
-            <Box width={60} height={4} borderRadius="full" overflow="hidden" marginBottom="s">
-              <LinearGradient
-                colors={GRADIENTS.primary}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={{ flex: 1 }}
-              />
-            </Box>
-            <Text variant="bodySmall" color="textSecondary">
-              Track daily metrics to power your AI health advice, {user?.first_name ?? 'Mama'} 🌟
+        <Animated.View entering={FadeInDown.duration(400).delay(80)}>
+          <Box paddingHorizontal="m" marginBottom="m" paddingTop="s">
+            <Text variant="caption" color="textSecondary" style={{ letterSpacing: 0.5 }}>
+              DAILY LOGS
+            </Text>
+            <Text variant="h1" color="textPrimary" marginTop="xs">
+              Health & Wellness
+            </Text>
+            <Text variant="bodySmall" color="textSecondary" marginTop="xs">
+              Track daily metrics to power your AI health insights, {user?.first_name ?? 'Mama'}
             </Text>
           </Box>
         </Animated.View>
@@ -92,7 +88,7 @@ export function TrackScreen() {
           </Box>
         </Animated.View>
 
-        {/* Filter Tabs */}
+        {/* Segmented Filter Tabs */}
         <Animated.View entering={FadeInUp.duration(400).delay(200)}>
           <ScrollView
             horizontal
@@ -100,48 +96,34 @@ export function TrackScreen() {
             contentContainerStyle={{ paddingHorizontal: 16, paddingRight: 32 }}
             style={{ marginBottom: 16 }}
           >
-            <Box flexDirection="row" gap="xs">
+            <Box flexDirection="row" gap="s">
               {TABS.map((tab) => {
                 const isSelected = selectedTab === tab.id;
                 return (
-                  <Touchable key={tab.id} onPress={() => setSelectedTab(tab.id)}>
+                  <Touchable key={tab.id} onPress={() => setSelectedTab(tab.id)} activeScale={0.96}>
                     <Box
                       paddingVertical="s"
                       paddingHorizontal="m"
                       borderRadius="full"
-                      style={{ overflow: 'hidden' }}
+                      backgroundColor={isSelected ? 'surfaceElevated' : 'warmSurfaceSoft'}
+                      borderWidth={1}
+                      borderColor={isSelected ? 'border' : 'border'}
+                      style={
+                        isSelected
+                          ? {
+                              shadowColor: theme.colors.shadow,
+                              shadowOpacity: 0.05,
+                              shadowOffset: { width: 0, height: 2 },
+                              shadowRadius: 6,
+                              elevation: 2,
+                            }
+                          : undefined
+                      }
                     >
-                      {isSelected ? (
-                        <LinearGradient
-                          colors={GRADIENTS.primary}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
-                          style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            borderRadius: 9999,
-                          }}
-                        />
-                      ) : (
-                        <Box
-                          style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            backgroundColor: theme.colors.inputBackground,
-                            borderRadius: 9999,
-                          }}
-                        />
-                      )}
                       <Text
                         variant="caption"
                         fontFamily={isSelected ? 'Inter_700Bold' : 'Inter_500Medium'}
-                        color={isSelected ? 'textInverse' : 'textSecondary'}
+                        color={isSelected ? 'primary' : 'textSecondary'}
                       >
                         {tab.label}
                       </Text>

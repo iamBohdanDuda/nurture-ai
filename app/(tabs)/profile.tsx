@@ -61,54 +61,50 @@ export default function ProfileScreen() {
 
   return (
     <Screen scrollable safeTop padded={false} backgroundColor="mainBackground">
-      {/* Gradient Profile Header */}
-      <LinearGradient
-        colors={GRADIENTS.header}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{
-          alignItems: 'center',
-          paddingTop: 24,
-          paddingBottom: 32,
-          borderBottomLeftRadius: 32,
-          borderBottomRightRadius: 32,
-        }}
+      {/* Profile Header */}
+      <Box
+        alignItems="center"
+        paddingTop="m"
+        paddingBottom="l"
+        paddingHorizontal="m"
       >
         {/* Avatar */}
-        <Touchable onPress={handlePickAvatar} activeScale={0.95}>
+        <Touchable onPress={handlePickAvatar} activeScale={0.95} accessibilityLabel="Change profile picture">
           <Box style={{ position: 'relative' }}>
             <Box
-              width={92}
-              height={92}
+              width={96}
+              height={96}
               borderRadius="full"
               borderWidth={3}
-              borderColor="white"
+              borderColor="surfaceElevated"
+              backgroundColor="primaryLight"
               alignItems="center"
               justifyContent="center"
               overflow="hidden"
               style={{
-                shadowColor: '#000',
-                shadowOpacity: 0.15,
+                shadowColor: theme.colors.shadow,
+                shadowOpacity: 0.1,
                 shadowOffset: { width: 0, height: 4 },
-                shadowRadius: 10,
+                shadowRadius: 12,
+                elevation: 3,
               }}
             >
               {avatarUri ? (
                 <Image
                   source={{ uri: avatarUri }}
-                  style={{ width: 92, height: 92, borderRadius: 46 }}
+                  style={{ width: 96, height: 96, borderRadius: 48 }}
                 />
               ) : (
                 <Box
-                  width={92}
-                  height={92}
+                  width={96}
+                  height={96}
                   borderRadius="full"
                   backgroundColor="primaryLight"
                   alignItems="center"
                   justifyContent="center"
                 >
-                  <Text style={{ fontSize: 44, lineHeight: 54, textAlign: 'center' }}>
-                    🤱
+                  <Text variant="h1" color="primary" fontFamily="Inter_700Bold">
+                    {user?.first_name ? user.first_name.charAt(0).toUpperCase() : 'M'}
                   </Text>
                 </Box>
               )}
@@ -120,81 +116,90 @@ export default function ProfileScreen() {
                 position: 'absolute',
                 bottom: 0,
                 right: 0,
-                width: 30,
-                height: 30,
-                borderRadius: 15,
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                backgroundColor: theme.colors.primary,
                 justifyContent: 'center',
                 alignItems: 'center',
                 borderWidth: 2,
                 borderColor: '#FFFFFF',
-                overflow: 'hidden',
               }}
             >
-              <LinearGradient
-                colors={GRADIENTS.primary}
-                style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: 15,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <Ionicons name="camera" size={14} color="#FFFFFF" />
-              </LinearGradient>
+              <Ionicons name="camera" size={15} color="#FFFFFF" />
             </Box>
           </Box>
         </Touchable>
 
-        <Text variant="h2" color="textInverse" marginTop="m">
+        <Text variant="h2" color="textPrimary" marginTop="m" fontFamily="Inter_700Bold">
           {user?.first_name ?? 'Mama'}
         </Text>
-        <Text variant="bodySmall" color="textInverse" style={{ opacity: 0.8 }}>
+        <Text variant="bodySmall" color="textSecondary" marginTop="xs">
           {user?.email ?? ''}
         </Text>
 
         {/* Subscription Badge */}
         <Box marginTop="s">
           {isPremium ? (
-            <GradientBadge preset="gold" style={{ paddingHorizontal: 20, paddingVertical: 8 }}>
-              <Text variant="caption" color="textInverse" fontFamily="Inter_700Bold">
-                ✨ Nurture Pro
+            <Box
+              backgroundColor="goldLight"
+              paddingHorizontal="m"
+              paddingVertical="xs"
+              borderRadius="full"
+              borderWidth={1}
+              borderColor="border"
+              flexDirection="row"
+              alignItems="center"
+            >
+              <Ionicons name="sparkles" size={13} color={theme.colors.gold} style={{ marginRight: 5 }} />
+              <Text variant="caption" color="textPrimary" fontFamily="Inter_700Bold">
+                Nurture Pro Member
               </Text>
-            </GradientBadge>
+            </Box>
           ) : (
             <Box
-              backgroundColor="surfaceFrosted"
+              backgroundColor="warmSurfaceSoft"
               borderRadius="full"
               paddingHorizontal="m"
               paddingVertical="xs"
+              borderWidth={1}
+              borderColor="border"
+              flexDirection="row"
+              alignItems="center"
             >
+              <Ionicons name="leaf-outline" size={13} color={theme.colors.secondary} style={{ marginRight: 5 }} />
               <Text variant="caption" color="secondary" fontFamily="Inter_600SemiBold">
-                🌱 Free Plan
+                Free Plan
               </Text>
             </Box>
           )}
         </Box>
-      </LinearGradient>
+      </Box>
 
       <Box paddingHorizontal="m">
-        {/* Pregnancy Stats Card with Timeline */}
+        {/* Pregnancy Timeline Card */}
         <Card
           variant="elevated"
-          marginTop="m"
           marginBottom="m"
-          style={{ borderRadius: 20 }}
+          padding="l"
+          style={{ borderRadius: 24, backgroundColor: '#FFFFFF' }}
         >
           <Box flexDirection="row" justifyContent="space-between" alignItems="center">
             <Box alignItems="center">
-              <Text variant="statLabel" style={{ textTransform: 'uppercase' }}>CURRENT WEEK</Text>
-              <Text variant="statValue" color="primary">{currentWeek}</Text>
+              <Text variant="caption" color="textMuted" style={{ textTransform: 'uppercase', fontSize: 10, letterSpacing: 0.8 }}>
+                CURRENT WEEK
+              </Text>
+              <Text variant="statValue" color="primary" marginTop="xs">
+                {currentWeek}
+              </Text>
             </Box>
 
             {/* Timeline connector */}
             <Box flex={1} marginHorizontal="m" alignItems="center">
               <Box
                 width="100%"
-                height={3}
+                height={4}
+                backgroundColor="border"
                 borderRadius="full"
                 overflow="hidden"
               >
@@ -205,48 +210,64 @@ export default function ProfileScreen() {
                   style={{ flex: 1, borderRadius: 9999 }}
                 />
               </Box>
-              <Box
-                width={10}
-                height={10}
-                borderRadius="full"
-                backgroundColor="coral"
-                style={{ position: 'absolute', right: -2, top: -3.5 }}
-              />
             </Box>
 
             <Box alignItems="center">
-              <Text variant="statLabel" style={{ textTransform: 'uppercase' }}>DUE DATE</Text>
-              <Text variant="statValue" color="coral">{dueDate ? formatDate(dueDate, 'MMM d') : '—'}</Text>
+              <Text variant="caption" color="textMuted" style={{ textTransform: 'uppercase', fontSize: 10, letterSpacing: 0.8 }}>
+                ESTIMATED DUE
+              </Text>
+              <Text variant="statValue" color="coral" marginTop="xs">
+                {dueDate ? formatDate(dueDate, 'MMM d') : '—'}
+              </Text>
             </Box>
           </Box>
         </Card>
 
-        {/* Menu Items with colored icon backgrounds */}
-        <Box gap="s" marginBottom="m">
-          {menuItems.map((item) => (
+        {/* Inset Grouped Settings List (Apple HIG style) */}
+        <Box
+          backgroundColor="surfaceElevated"
+          borderRadius="xl"
+          borderWidth={1}
+          borderColor="border"
+          overflow="hidden"
+          marginBottom="m"
+          style={{
+            shadowColor: theme.colors.shadow,
+            shadowOpacity: 0.04,
+            shadowOffset: { width: 0, height: 3 },
+            shadowRadius: 10,
+            elevation: 2,
+          }}
+        >
+          {menuItems.map((item, index) => (
             <Touchable key={item.label} onPress={() => router.push(item.route as any)}>
-              <Card variant="glass" style={{ borderRadius: 16 }}>
-                <Box flexDirection="row" alignItems="center">
-                  <Box
-                    width={40}
-                    height={40}
-                    borderRadius="m"
-                    alignItems="center"
-                    justifyContent="center"
-                    style={{ backgroundColor: item.bg }}
-                  >
-                    <Ionicons name={item.icon} size={22} color={item.color} />
-                  </Box>
-                  <Text variant="body" marginLeft="m" flex={1} fontFamily="Inter_500Medium">
-                    {item.label}
-                  </Text>
-                  <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
+              <Box
+                flexDirection="row"
+                alignItems="center"
+                paddingHorizontal="m"
+                paddingVertical="m"
+                borderBottomWidth={1}
+                borderBottomColor="border"
+              >
+                <Box
+                  width={38}
+                  height={38}
+                  borderRadius="m"
+                  alignItems="center"
+                  justifyContent="center"
+                  style={{ backgroundColor: item.bg }}
+                >
+                  <Ionicons name={item.icon} size={20} color={item.color} />
                 </Box>
-              </Card>
+                <Text variant="body" marginLeft="m" flex={1} fontFamily="Inter_500Medium">
+                  {item.label}
+                </Text>
+                <Ionicons name="chevron-forward" size={18} color={theme.colors.textMuted} />
+              </Box>
             </Touchable>
           ))}
 
-          {/* Subscription Button */}
+          {/* Subscription Row */}
           <Touchable 
             onPress={() => {
               if (isPremium) {
@@ -256,30 +277,33 @@ export default function ProfileScreen() {
               }
             }}
           >
-            <Card variant="glass" style={{ borderRadius: 16 }}>
-              <Box flexDirection="row" alignItems="center">
-                <Box
-                  width={40}
-                  height={40}
-                  borderRadius="m"
-                  alignItems="center"
-                  justifyContent="center"
-                  style={{
-                    backgroundColor: isPremium ? theme.colors.goldLight : theme.colors.primaryLight,
-                  }}
-                >
-                  <Ionicons
-                    name={isPremium ? 'star' : 'diamond-outline'}
-                    size={22}
-                    color={isPremium ? theme.colors.gold : theme.colors.primary}
-                  />
-                </Box>
-                <Text variant="body" marginLeft="m" flex={1} fontFamily="Inter_500Medium">
-                  {isPremium ? 'Manage Subscription' : 'Upgrade to Nurture Pro ✨'}
-                </Text>
-                <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
+            <Box
+              flexDirection="row"
+              alignItems="center"
+              paddingHorizontal="m"
+              paddingVertical="m"
+            >
+              <Box
+                width={38}
+                height={38}
+                borderRadius="m"
+                alignItems="center"
+                justifyContent="center"
+                style={{
+                  backgroundColor: isPremium ? theme.colors.goldLight : theme.colors.primaryLight,
+                }}
+              >
+                <Ionicons
+                  name={isPremium ? 'sparkles' : 'diamond-outline'}
+                  size={20}
+                  color={isPremium ? theme.colors.gold : theme.colors.primary}
+                />
               </Box>
-            </Card>
+              <Text variant="body" marginLeft="m" flex={1} fontFamily="Inter_500Medium">
+                {isPremium ? 'Manage Membership' : 'Upgrade to Nurture Pro'}
+              </Text>
+              <Ionicons name="chevron-forward" size={18} color={theme.colors.textMuted} />
+            </Box>
           </Touchable>
         </Box>
 

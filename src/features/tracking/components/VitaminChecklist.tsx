@@ -54,37 +54,20 @@ export function VitaminChecklist() {
     <Card
       variant="elevated"
       marginBottom="m"
-      style={{ borderRadius: 20, overflow: 'hidden' }}
+      padding="m"
+      style={{ borderRadius: 24, backgroundColor: '#FFFFFF' }}
     >
-      <LinearGradient
-        colors={[theme.colors.surfaceElevated, theme.colors.accentLight]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 20 }}
-      />
-
       <Box flexDirection="row" alignItems="center" justifyContent="space-between" marginBottom="m">
         <Box flexDirection="row" alignItems="center">
           <Box
             width={36}
             height={36}
             borderRadius="full"
+            backgroundColor="secondaryLight"
             alignItems="center"
             justifyContent="center"
-            style={{ overflow: 'hidden' }}
           >
-            <LinearGradient
-              colors={['#B794F4', '#9F7AEA']}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Ionicons name="medical" size={18} color="#FFFFFF" />
-            </LinearGradient>
+            <Ionicons name="medkit" size={18} color={theme.colors.secondary} />
           </Box>
           <Text variant="h3" marginLeft="s">Daily Vitamins</Text>
         </Box>

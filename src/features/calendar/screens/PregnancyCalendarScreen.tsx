@@ -36,9 +36,6 @@ import { useTrackingStore } from '@/stores/trackingStore';
 import { getWeekInfo } from '@/utils/pregnancy';
 import { PREGNANCY_TOTAL_WEEKS } from '@/core/constants';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const DAY_SIZE = Math.floor((SCREEN_WIDTH - 48) / 7);
-
 // Trimester styling presets
 const TRIMESTER_THEMES = {
   1: {
@@ -239,21 +236,38 @@ export function PregnancyCalendarScreen() {
     return getWeekInfo(w);
   }, [selectedInfo.week, currentWeek]);
 
-  // Calendar matrix calculation
-  const calendarDays = useMemo(() => {
+  // Calendar matrix calculation into rows of 7 days
+  const calendarWeeks = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(monthStart);
     const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
     // Weekday of monthStart (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
     // We display Mon-Sun (1 = Monday, 7 = Sunday)
-    let startDayOfWeek = monthStart.getDay();
+    const startDayOfWeek = monthStart.getDay();
     // Convert so Monday = 0, Sunday = 6
     const offset = (startDayOfWeek + 6) % 7;
 
-    const leadingEmpty = Array.from({ length: offset });
+    const allSlots: (Date | null)[] = [
+      ...Array.from({ length: offset }, () => null),
+      ...days,
+    ];
 
-    return { days, leadingEmpty };
+    // Pad trailing days to complete the 7-day row
+    const remainder = allSlots.length % 7;
+    if (remainder > 0) {
+      const trailingPad = 7 - remainder;
+      for (let i = 0; i < trailingPad; i++) {
+        allSlots.push(null);
+      }
+    }
+
+    // Split into arrays of exactly 7 items per week
+    const weeks: (Date | null)[][] = [];
+    for (let i = 0; i < allSlots.length; i += 7) {
+      weeks.push(allSlots.slice(i, i + 7));
+    }
+    return weeks;
   }, [currentMonth]);
 
   const currentWeekInfo = getWeekInfo(currentWeek);
@@ -270,36 +284,35 @@ export function PregnancyCalendarScreen() {
         borderColor="border"
         style={{ paddingTop: Math.max(insets.top, 16) }}
       >
-        <Box flexDirection="row" alignItems="center" justifyContent="space-between">
-          <Box flexDirection="row" alignItems="center">
-            <Box
-              width={40}
-              height={40}
-              borderRadius="full"
-              backgroundColor="accentLight"
-              alignItems="center"
-              justifyContent="center"
-              marginRight="s"
-            >
-              <Ionicons name="calendar" size={20} color={theme.colors.accent} />
-            </Box>
-            <Box>
-              <Text variant="h2" color="textPrimary">
-                Pregnancy Calendar
-              </Text>
-              <Text variant="caption" color="textMuted">
-                Your 40-Week Journey & Milestones
-              </Text>
-            </Box>
-          </Box>
-
+        <Box flexDirection="row" alignItems="center">
           <TouchableOpacity
             onPress={() => router.back()}
-            style={styles.closeButton}
+            style={[styles.closeButton, { marginRight: 12 }]}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            accessibilityLabel="Close calendar"
           >
-            <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
+            <Ionicons name="close" size={20} color={theme.colors.textPrimary} />
           </TouchableOpacity>
+
+          <Box
+            width={38}
+            height={38}
+            borderRadius="full"
+            backgroundColor="accentLight"
+            alignItems="center"
+            justifyContent="center"
+            marginRight="s"
+          >
+            <Ionicons name="calendar" size={18} color={theme.colors.accent} />
+          </Box>
+          <Box flex={1}>
+            <Text variant="h2" color="textPrimary">
+              Pregnancy Calendar
+            </Text>
+            <Text variant="caption" color="textMuted">
+              Your 40-Week Journey & Milestones
+            </Text>
+          </Box>
         </Box>
       </Box>
 
@@ -325,8 +338,8 @@ export function PregnancyCalendarScreen() {
                 paddingVertical="xs"
                 borderRadius="full"
               >
-                <Text style={{ fontSize: 13, marginRight: 4 }}>🎯</Text>
-                <Text variant="caption" fontFamily="Inter_700Bold" color="primaryDark">
+                <Ionicons name="flag" size={13} color="#9D174D" style={{ marginRight: 5 }} />
+                <Text variant="caption" fontFamily="Inter_700Bold" color="primaryDark" style={{ letterSpacing: 0.5 }}>
                   GOAL: BABY ARRIVAL
                 </Text>
               </Box>
@@ -438,7 +451,7 @@ export function PregnancyCalendarScreen() {
               borderWidth={1}
               borderColor="border"
             >
-              <Text style={{ fontSize: 11, marginRight: 4 }}>⭐</Text>
+              <Ionicons name="star" size={12} color="#CA8A04" style={{ marginRight: 4 }} />
               <Text variant="caption" color="textPrimary" fontFamily="Inter_600SemiBold">
                 Due Date
               </Text>
@@ -450,7 +463,7 @@ export function PregnancyCalendarScreen() {
         <Box paddingHorizontal="m" marginTop="m">
           <Box
             backgroundColor="surfaceElevated"
-            borderRadius="l"
+            borderRadius="xl"
             padding="m"
             borderWidth={1}
             borderColor="border"
@@ -462,6 +475,7 @@ export function PregnancyCalendarScreen() {
                 onPress={() => setCurrentMonth(subMonths(currentMonth, 1))}
                 style={styles.navButton}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityLabel="Previous month"
               >
                 <Ionicons name="chevron-back" size={20} color={theme.colors.textPrimary} />
               </TouchableOpacity>
@@ -485,6 +499,7 @@ export function PregnancyCalendarScreen() {
                     setSelectedDate(today);
                   }}
                   style={styles.todayButton}
+                  accessibilityLabel="Jump to today"
                 >
                   <Text variant="caption" color="primary" fontFamily="Inter_600SemiBold">
                     Today
@@ -495,6 +510,7 @@ export function PregnancyCalendarScreen() {
                   onPress={() => setCurrentMonth(addMonths(currentMonth, 1))}
                   style={styles.navButton}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  accessibilityLabel="Next month"
                 >
                   <Ionicons name="chevron-forward" size={20} color={theme.colors.textPrimary} />
                 </TouchableOpacity>
@@ -502,107 +518,112 @@ export function PregnancyCalendarScreen() {
             </Box>
 
             {/* Days of Week Header */}
-            <Box flexDirection="row" justifyContent="space-around" marginBottom="s">
+            <View style={styles.weekHeaderRow}>
               {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, idx) => (
-                <Box key={`dow-${idx}`} width={DAY_SIZE} alignItems="center">
+                <View key={`dow-${idx}`} style={styles.weekHeaderCell}>
                   <Text variant="caption" color="textMuted" fontFamily="Inter_600SemiBold">
                     {day}
                   </Text>
-                </Box>
+                </View>
               ))}
-            </Box>
+            </View>
 
-            {/* Calendar Grid */}
-            <View style={styles.gridContainer}>
-              {calendarDays.leadingEmpty.map((_, idx) => (
-                <View key={`lead-${idx}`} style={[styles.dayCell, { width: DAY_SIZE, height: DAY_SIZE + 4 }]} />
+            {/* Calendar Weeks Matrix */}
+            <View style={styles.weeksContainer}>
+              {calendarWeeks.map((week, weekIdx) => (
+                <View key={`week-${weekIdx}`} style={styles.weekRow}>
+                  {week.map((date, dayIdx) => {
+                    if (!date) {
+                      return <View key={`empty-${weekIdx}-${dayIdx}`} style={styles.dayCellEmpty} />;
+                    }
+
+                    const isSelected = isSameDay(date, selectedDate);
+                    const isToday = isSameDay(date, new Date());
+                    const gest = getGestationalInfoForDate(date);
+                    const hasActivity = hasActivityOnDate(date);
+
+                    // Determine period style
+                    let cellBg = theme.colors.mainBackground;
+                    let cellTextColor = theme.colors.textPrimary;
+                    let borderColor = 'transparent';
+
+                    if (gest.isDueDate) {
+                      cellBg = TRIMESTER_THEMES.due.bg;
+                      cellTextColor = TRIMESTER_THEMES.due.text;
+                      borderColor = TRIMESTER_THEMES.due.border;
+                    } else if (gest.trimester === 1) {
+                      cellBg = TRIMESTER_THEMES[1].bg;
+                      cellTextColor = TRIMESTER_THEMES[1].text;
+                    } else if (gest.trimester === 2) {
+                      cellBg = TRIMESTER_THEMES[2].bg;
+                      cellTextColor = TRIMESTER_THEMES[2].text;
+                    } else if (gest.trimester === 3) {
+                      cellBg = TRIMESTER_THEMES[3].bg;
+                      cellTextColor = TRIMESTER_THEMES[3].text;
+                    }
+
+                    return (
+                      <TouchableOpacity
+                        key={date.toISOString()}
+                        onPress={() => setSelectedDate(date)}
+                        activeOpacity={0.7}
+                        style={[
+                          styles.dayCell,
+                          {
+                            backgroundColor: cellBg,
+                            borderColor: isSelected
+                              ? theme.colors.primaryDark
+                              : isToday
+                              ? theme.colors.primary
+                              : borderColor,
+                            borderWidth: isSelected ? 2 : isToday ? 1.5 : gest.isDueDate ? 1 : 0,
+                          },
+                        ]}
+                      >
+                        {/* Due Date Star */}
+                        {gest.isDueDate && (
+                          <Ionicons
+                            name="star"
+                            size={10}
+                            color="#CA8A04"
+                            style={{ position: 'absolute', top: 2, right: 3 }}
+                          />
+                        )}
+
+                        {/* Date Number */}
+                        <Text
+                          style={[
+                            styles.dayNumber,
+                            {
+                              color: isToday ? theme.colors.primaryDark : cellTextColor,
+                              fontWeight: isToday || isSelected ? '700' : '600',
+                            },
+                          ]}
+                        >
+                          {format(date, 'd')}
+                        </Text>
+
+                        {/* Gestational Week indicator for Mondays */}
+                        {gest.week > 0 && gest.day === 1 && !gest.isDueDate && (
+                          <Text style={[styles.weekLabel, { color: cellTextColor }]}>
+                            W{gest.week}
+                          </Text>
+                        )}
+
+                        {/* Today Pill or Dot */}
+                        {isToday && (
+                          <View style={[styles.todayIndicator, { backgroundColor: theme.colors.primary }]} />
+                        )}
+
+                        {/* Logged Health Activity Dot */}
+                        {hasActivity && !isToday && (
+                          <View style={[styles.activityDot, { backgroundColor: theme.colors.accent }]} />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
               ))}
-
-              {calendarDays.days.map((date) => {
-                const isSelected = isSameDay(date, selectedDate);
-                const isToday = isSameDay(date, new Date());
-                const gest = getGestationalInfoForDate(date);
-                const hasActivity = hasActivityOnDate(date);
-
-                // Determine period style
-                let cellBg = theme.colors.mainBackground;
-                let cellTextColor = theme.colors.textPrimary;
-                let borderColor = 'transparent';
-
-                if (gest.isDueDate) {
-                  cellBg = TRIMESTER_THEMES.due.bg;
-                  cellTextColor = TRIMESTER_THEMES.due.text;
-                  borderColor = TRIMESTER_THEMES.due.border;
-                } else if (gest.trimester === 1) {
-                  cellBg = TRIMESTER_THEMES[1].bg;
-                  cellTextColor = TRIMESTER_THEMES[1].text;
-                } else if (gest.trimester === 2) {
-                  cellBg = TRIMESTER_THEMES[2].bg;
-                  cellTextColor = TRIMESTER_THEMES[2].text;
-                } else if (gest.trimester === 3) {
-                  cellBg = TRIMESTER_THEMES[3].bg;
-                  cellTextColor = TRIMESTER_THEMES[3].text;
-                }
-
-                return (
-                  <TouchableOpacity
-                    key={date.toISOString()}
-                    onPress={() => setSelectedDate(date)}
-                    activeOpacity={0.7}
-                    style={[
-                      styles.dayCell,
-                      {
-                        width: DAY_SIZE,
-                        height: DAY_SIZE + 4,
-                        backgroundColor: cellBg,
-                        borderColor: isSelected
-                          ? theme.colors.primaryDark
-                          : isToday
-                          ? theme.colors.primary
-                          : borderColor,
-                        borderWidth: isSelected ? 2 : isToday ? 1.5 : gest.isDueDate ? 1 : 0,
-                      },
-                    ]}
-                  >
-                    {/* Due Date Crown/Star */}
-                    {gest.isDueDate && (
-                      <Text style={{ fontSize: 9, position: 'absolute', top: 1, right: 2 }}>
-                        ⭐
-                      </Text>
-                    )}
-
-                    {/* Date Number */}
-                    <Text
-                      style={[
-                        styles.dayNumber,
-                        {
-                          color: isToday ? theme.colors.primaryDark : cellTextColor,
-                          fontWeight: isToday || isSelected ? '700' : '500',
-                        },
-                      ]}
-                    >
-                      {format(date, 'd')}
-                    </Text>
-
-                    {/* Gestational Week indicator for Mondays */}
-                    {gest.week > 0 && gest.day === 1 && !gest.isDueDate && (
-                      <Text style={[styles.weekLabel, { color: cellTextColor }]}>
-                        W{gest.week}
-                      </Text>
-                    )}
-
-                    {/* Today Pill or Dot */}
-                    {isToday && (
-                      <View style={[styles.todayIndicator, { backgroundColor: theme.colors.primary }]} />
-                    )}
-
-                    {/* Logged Health Activity Dot */}
-                    {hasActivity && !isToday && (
-                      <View style={[styles.activityDot, { backgroundColor: theme.colors.accent }]} />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
             </View>
           </Box>
         </Box>
@@ -866,15 +887,35 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF5F7',
     marginRight: 6,
   },
-  gridContainer: {
+  weekHeaderRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    marginBottom: 8,
   },
-  dayCell: {
+  weekHeaderCell: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 2,
-    borderRadius: 10,
+    paddingVertical: 2,
+  },
+  weeksContainer: {
+    gap: 4,
+  },
+  weekRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dayCell: {
+    flex: 1,
+    height: 48,
+    marginHorizontal: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+  },
+  dayCellEmpty: {
+    flex: 1,
+    height: 48,
+    marginHorizontal: 2,
   },
   dayNumber: {
     fontSize: 13,

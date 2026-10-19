@@ -1,7 +1,6 @@
 import React from 'react';
 import { ScrollView } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Box, Text } from '@/theme/restyleComponents';
 import { Touchable } from '@/components/primitives/Touchable';
 import { useTheme } from '@shopify/restyle';
@@ -13,12 +12,12 @@ interface SuggestedQuestionsProps {
 }
 
 const SUGGESTIONS = [
-  { emoji: '🍎', text: "What's safe to eat this week?", gradient: ['#FED7E2', '#FBB6CE'] },
-  { emoji: '🤢', text: 'How to manage morning sickness?', gradient: ['#C6F6D5', '#9AE6B4'] },
-  { emoji: '💊', text: 'Which vitamins should I take?', gradient: ['#E9D8FD', '#D6BCFA'] },
-  { emoji: '🏋️', text: 'Safe exercises for my trimester?', gradient: ['#FFECD2', '#FFD8A8'] },
-  { emoji: '😴', text: 'Tips for better sleep?', gradient: ['#E0F7FA', '#B2EBF2'] },
-  { emoji: '📊', text: "How is my baby developing?", gradient: ['#FFF8E1', '#FFECB3'] },
+  { icon: '🍎', text: "What's safe to eat this week?" },
+  { icon: '✨', text: 'How to soothe morning sickness?' },
+  { icon: '💊', text: 'Which vitamins should I take today?' },
+  { icon: '🧘', text: 'Safe stretches for my trimester' },
+  { icon: '🌙', text: 'Tips for peaceful sleep' },
+  { icon: '👶', text: "How is my baby growing?" },
 ];
 
 export function SuggestedQuestions({ onSelect, visible }: SuggestedQuestionsProps) {
@@ -27,11 +26,11 @@ export function SuggestedQuestions({ onSelect, visible }: SuggestedQuestionsProp
   if (!visible) return null;
 
   return (
-    <Animated.View entering={FadeInDown.duration(400).delay(200)}>
+    <Animated.View entering={FadeInDown.duration(400).delay(150)}>
       <Box paddingVertical="s">
-        <Box paddingHorizontal="m">
-          <Text variant="label" marginBottom="s" color="textSecondary">
-            Ask me anything 👇
+        <Box paddingHorizontal="m" marginBottom="xs">
+          <Text variant="caption" color="textMuted" style={{ letterSpacing: 0.5, textTransform: 'uppercase' }}>
+            Suggested questions
           </Text>
         </Box>
         <ScrollView
@@ -43,33 +42,31 @@ export function SuggestedQuestions({ onSelect, visible }: SuggestedQuestionsProp
             <Touchable
               key={index}
               onPress={() => onSelect(suggestion.text)}
-              activeScale={0.95}
+              activeScale={0.96}
             >
               <Box
                 borderRadius="full"
                 flexDirection="row"
                 alignItems="center"
-                style={{ overflow: 'hidden' }}
+                backgroundColor="surfaceElevated"
+                paddingHorizontal="m"
+                paddingVertical="s"
+                borderWidth={1}
+                borderColor="border"
+                style={{
+                  shadowColor: theme.colors.shadow,
+                  shadowOpacity: 0.03,
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowRadius: 6,
+                  elevation: 1,
+                }}
               >
-                <LinearGradient
-                  colors={suggestion.gradient as any}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingHorizontal: 16,
-                    paddingVertical: 10,
-                    borderRadius: 9999,
-                  }}
-                >
-                  <Text style={{ fontSize: 16, lineHeight: 20, marginRight: 6 }}>
-                    {suggestion.emoji}
-                  </Text>
-                  <Text variant="bodySmall" color="textPrimary" fontFamily="Inter_500Medium">
-                    {suggestion.text}
-                  </Text>
-                </LinearGradient>
+                <Text style={{ fontSize: 14, marginRight: 6 }}>
+                  {suggestion.icon}
+                </Text>
+                <Text variant="caption" color="textPrimary" fontFamily="Inter_500Medium">
+                  {suggestion.text}
+                </Text>
               </Box>
             </Touchable>
           ))}
@@ -78,3 +75,4 @@ export function SuggestedQuestions({ onSelect, visible }: SuggestedQuestionsProp
     </Animated.View>
   );
 }
+

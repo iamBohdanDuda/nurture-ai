@@ -111,50 +111,51 @@ export function AIProviderSelector({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: '#FFFFFF',
     padding: 3,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.9)',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
+    borderColor: '#EFE7DC',
+    shadowColor: '#6B4032',
+    shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 6,
+    elevation: 2,
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
   },
   activeChip: {
-    backgroundColor: '#ED64A6',
-    shadowColor: '#ED64A6',
-    shadowOpacity: 0.35,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 3,
+    backgroundColor: '#E06D8C',
+    shadowColor: '#E06D8C',
+    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
     elevation: 2,
   },
   inactiveChip: {
     backgroundColor: 'transparent',
   },
   deactivatedChip: {
-    opacity: 0.45,
+    opacity: 0.4,
     backgroundColor: 'transparent',
   },
   chipText: {
     fontSize: 11,
     fontWeight: '700',
+    letterSpacing: 0.2,
   },
   activeText: {
     color: '#FFFFFF',
   },
   inactiveText: {
-    color: '#475569',
+    color: '#5C4E49',
   },
   deactivatedText: {
-    color: '#94A3B8',
+    color: '#A39690',
   },
 });

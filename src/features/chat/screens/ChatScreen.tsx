@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, ActivityIndicator, Alert, Modal, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import { GiftedChat, type IMessage } from 'react-native-gifted-chat';
+import { GiftedChat, Message, type IMessage } from 'react-native-gifted-chat';
 import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@shopify/restyle';
@@ -142,30 +142,28 @@ export function ChatScreen() {
 
     return (
       <View style={styles.emptyContainer}>
-        {/* Illustrated character placeholder */}
+        {/* Soft glowing ambient circle */}
         <Box
-          width={100}
-          height={100}
+          width={90}
+          height={90}
           borderRadius="full"
+          backgroundColor="primaryLight"
           alignItems="center"
           justifyContent="center"
-          style={{ overflow: 'hidden' }}
+          marginBottom="m"
+          borderWidth={1}
+          borderColor="border"
+          style={{
+            shadowColor: theme.colors.shadow,
+            shadowOpacity: 0.06,
+            shadowOffset: { width: 0, height: 4 },
+            shadowRadius: 12,
+          }}
         >
-          <LinearGradient
-            colors={GRADIENTS.headerSubtle}
-            style={{
-              width: 100,
-              height: 100,
-              borderRadius: 50,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 52, lineHeight: 64, textAlign: 'center' }}>🤱</Text>
-          </LinearGradient>
+          <Ionicons name="heart" size={40} color={theme.colors.primary} />
         </Box>
-        <Text variant="h2" marginTop="m" textAlign="center">
-          Hello, Mama!
+        <Text variant="h2" textAlign="center" color="textPrimary">
+          How can I support you, Mama?
         </Text>
         <Text
           variant="bodySmall"
@@ -173,13 +171,13 @@ export function ChatScreen() {
           marginTop="s"
           color="textSecondary"
           paddingHorizontal="l"
+          style={{ lineHeight: 22 }}
         >
-          I'm your AI pregnancy companion. Ask me anything about nutrition,
-          symptoms, baby development, or send a photo of your meal!
+          I'm your maternal doula companion. Ask me anything about nutrition safety, symptom relief, body changes, or upload a photo of your meal!
         </Text>
       </View>
     );
-  }, [isLoadingHistory, theme.colors.primary]);
+  }, [isLoadingHistory, theme.colors.primary, theme.colors.shadow, theme.colors.border]);
 
   return (
     <KeyboardAvoidingView 
@@ -187,74 +185,59 @@ export function ChatScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <Box flex={1} backgroundColor="mainBackground">
-        {/* Premium Header with gradient */}
-        <Box style={{ overflow: 'hidden' }}>
-        <LinearGradient
-          colors={GRADIENTS.primary}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+        {/* Serene Maternal Header */}
+        <Box
+          backgroundColor="surfaceElevated"
           style={{
-            paddingTop: Math.max(insets.top + 8, 24),
-            paddingBottom: 14,
+            paddingTop: Math.max(insets.top + 8, 20),
+            paddingBottom: 12,
             paddingHorizontal: 16,
+            borderBottomWidth: StyleSheet.hairlineWidth,
+            borderBottomColor: theme.colors.border,
+            shadowColor: theme.colors.shadow,
+            shadowOpacity: 0.03,
+            shadowOffset: { width: 0, height: 2 },
+            shadowRadius: 8,
+            elevation: 1,
           }}
         >
-          <Box flexDirection="row" alignItems="center" justifyContent="space-between">
+          <Box flexDirection="row" alignItems="center" justifyContent="space-between" marginBottom="s">
             <Box flexDirection="row" alignItems="center" flex={1}>
               {/* AI Avatar */}
               <Box
-                width={44}
-                height={44}
+                width={42}
+                height={42}
                 borderRadius="full"
-                backgroundColor="surfaceElevated"
+                backgroundColor="primaryLight"
                 alignItems="center"
                 justifyContent="center"
                 marginRight="s"
-                style={{
-                  shadowColor: '#000',
-                  shadowOpacity: 0.15,
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowRadius: 5,
-                  elevation: 3,
-                }}
+                borderWidth={1}
+                borderColor="border"
               >
-                <Text style={{ fontSize: 24, lineHeight: 30 }}>🤱</Text>
+                <Ionicons name="sparkles" size={20} color={theme.colors.primary} />
               </Box>
               <Box flex={1}>
-                <Text
-                  variant="h3"
-                  style={{
-                    color: '#FFFFFF',
-                    fontWeight: '700',
-                    textShadowColor: 'rgba(0, 0, 0, 0.15)',
-                    textShadowOffset: { width: 0, height: 1 },
-                    textShadowRadius: 2,
-                  }}
-                >
-                  NurtureAI
+                <Text variant="h3" color="textPrimary" fontFamily="Inter_700Bold">
+                  Nurture Companion
                 </Text>
                 <Box flexDirection="row" alignItems="center" marginTop="xs">
                   <Box
-                    width={8}
-                    height={8}
+                    width={7}
+                    height={7}
                     borderRadius="full"
                     backgroundColor={isStreaming ? 'warning' : 'secondary'}
                     marginRight="xs"
-                    style={{
-                      shadowColor: '#48BB78',
-                      shadowOpacity: 0.6,
-                      shadowRadius: 3,
-                    }}
                   />
-                  <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '500', opacity: 0.95 }}>
-                    {isStreaming ? 'Typing...' : 'Online'}
+                  <Text variant="caption" color="textMuted">
+                    {isStreaming ? 'Thinking...' : '24/7 Doula & Wellness Guide'}
                   </Text>
                 </Box>
               </Box>
             </Box>
-            
+
             {/* Header Right Buttons: Memory & Previous Chats */}
-            <Box flexDirection="row" alignItems="center" gap="s">
+            <Box flexDirection="row" alignItems="center" gap="xs">
               {/* AI Memory Notes Button */}
               <TouchableOpacity
                 onPress={() => setMemoryModalVisible(true)}
@@ -262,23 +245,18 @@ export function ChatScreen() {
                 accessibilityLabel="View AI Memory Notes"
               >
                 <Box
-                  height={40}
+                  height={36}
                   paddingHorizontal="m"
                   borderRadius="full"
-                  backgroundColor="surfaceElevated"
+                  backgroundColor="warmSurfaceSoft"
+                  borderWidth={1}
+                  borderColor="border"
                   flexDirection="row"
                   alignItems="center"
                   justifyContent="center"
-                  style={{
-                    shadowColor: '#000',
-                    shadowOpacity: 0.12,
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowRadius: 4,
-                    elevation: 2,
-                  }}
                 >
-                  <Ionicons name="sparkles" size={15} color={theme.colors.primary} style={{ marginRight: 5 }} />
-                  <Text style={{ fontSize: 13, fontWeight: '700', color: theme.colors.primary }}>
+                  <Ionicons name="sparkles" size={13} color={theme.colors.primary} style={{ marginRight: 4 }} />
+                  <Text variant="caption" color="primary" fontFamily="Inter_600SemiBold">
                     Memory
                   </Text>
                 </Box>
@@ -291,27 +269,22 @@ export function ChatScreen() {
                 accessibilityLabel="Open Previous Chats Menu"
               >
                 <Box
-                  width={40}
-                  height={40}
+                  width={36}
+                  height={36}
                   borderRadius="full"
-                  backgroundColor="surfaceElevated"
+                  backgroundColor="warmSurfaceSoft"
+                  borderWidth={1}
+                  borderColor="border"
                   alignItems="center"
                   justifyContent="center"
-                  style={{
-                    shadowColor: '#000',
-                    shadowOpacity: 0.12,
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowRadius: 4,
-                    elevation: 2,
-                  }}
                 >
-                  <Ionicons name="menu" size={22} color={theme.colors.primary} />
+                  <Ionicons name="time-outline" size={18} color={theme.colors.textSecondary} />
                 </Box>
               </TouchableOpacity>
             </Box>
           </Box>
 
-          {/* AI Provider Switcher (Gemini vs OpenAI) */}
+          {/* AI Provider Switcher */}
           <AIProviderSelector
             selectedProvider={selectedProvider}
             selectedModel={selectedModel}
@@ -325,11 +298,9 @@ export function ChatScreen() {
               paddingHorizontal="m"
               paddingVertical="s"
               borderRadius="m"
-              style={{
-                backgroundColor: 'rgba(0, 0, 0, 0.15)',
-                borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.25)',
-              }}
+              backgroundColor="warmSurfaceSoft"
+              borderWidth={1}
+              borderColor="border"
             >
               <Box
                 flexDirection="row"
@@ -338,48 +309,39 @@ export function ChatScreen() {
                 marginBottom="xs"
               >
                 <Box flexDirection="row" alignItems="center">
-                  <Ionicons name="chatbubbles-outline" size={13} color="#FFFFFF" style={{ marginRight: 6 }} />
-                  <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '600' }}>
+                  <Ionicons name="chatbubbles-outline" size={13} color={theme.colors.textSecondary} style={{ marginRight: 6 }} />
+                  <Text variant="caption" color="textSecondary" fontFamily="Inter_600SemiBold">
                     {weeklyMessageCount}/{weeklyMessageLimit} messages this week
                   </Text>
                 </Box>
                 {weeklyMessageCount >= weeklyMessageLimit ? (
                   <Box
-                    backgroundColor="surfaceElevated"
+                    backgroundColor="primary"
                     paddingHorizontal="s"
                     borderRadius="full"
-                    style={{ paddingVertical: 2 }}
                   >
-                    <Text style={{ color: '#E53E3E', fontSize: 10, fontWeight: '700' }}>
-                      Limit Reached
+                    <Text variant="caption" color="textInverse" fontFamily="Inter_700Bold">
+                      Limit reached
                     </Text>
                   </Box>
                 ) : (
-                  <Text style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: 11, fontWeight: '500' }}>
-                    {Math.max(0, weeklyMessageLimit - weeklyMessageCount)} left
+                  <Text variant="caption" color="textMuted">
+                    {weeklyMessageLimit - weeklyMessageCount} left
                   </Text>
                 )}
               </Box>
-              <Box
-                width="100%"
-                height={5}
-                borderRadius="full"
-                overflow="hidden"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.3)' }}
-              >
+
+              <Box width="100%" height={4} backgroundColor="border" borderRadius="full" overflow="hidden">
                 <Box
-                  height={5}
+                  height={4}
                   borderRadius="full"
-                  style={{
-                    width: `${limitPercent}%`,
-                    backgroundColor: weeklyMessageCount >= weeklyMessageLimit ? '#FEB2B2' : '#FFFFFF',
-                  }}
+                  backgroundColor={weeklyMessageCount >= weeklyMessageLimit ? 'error' : 'primary'}
+                  style={{ width: `${limitPercent}%` }}
                 />
               </Box>
             </Box>
           )}
-        </LinearGradient>
-      </Box>
+        </Box>
 
       {/* Message Limit Banner (warning/blocked states only) */}
       <MessageLimitBanner
@@ -398,16 +360,31 @@ export function ChatScreen() {
       <GiftedChat
         messages={giftedMessages}
         user={{ _id: CURRENT_USER_ID }}
+        renderMessage={(props) => (
+          <Message
+            {...props}
+            containerStyle={{
+              left: {
+                maxWidth: '94%',
+                marginLeft: 4,
+              },
+              right: {
+                maxWidth: '85%',
+                marginRight: 4,
+              },
+            }}
+          />
+        )}
         renderBubble={(props) => <ChatBubble {...props} />}
         renderFooter={renderFooter}
         renderChatEmpty={renderEmpty}
         renderInputToolbar={() => null}
         isInverted={true}
         listProps={{
-          contentContainerStyle: {
-            flexGrow: 1,
-            justifyContent: messages.length === 0 ? 'center' : undefined,
-          },
+          contentContainerStyle:
+            messages.length === 0
+              ? { flexGrow: 1, justifyContent: 'center' }
+              : { paddingTop: 8, paddingBottom: 16 },
         }}
         minInputToolbarHeight={0}
         renderAvatar={(props) => {

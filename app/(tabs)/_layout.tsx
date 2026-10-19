@@ -12,36 +12,36 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.colors.tabBarActive,
-        tabBarInactiveTintColor: theme.colors.tabBarInactive,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textMuted,
         tabBarStyle: {
           position: 'absolute',
-          bottom: 16,
-          left: 16,
-          right: 16,
-          height: 72,
-          borderRadius: 24,
-          paddingBottom: 8,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: Platform.OS === 'ios' ? 86 : 68,
+          paddingBottom: Platform.OS === 'ios' ? 26 : 10,
           paddingTop: 8,
           backgroundColor: Platform.OS === 'ios'
-            ? 'transparent' // Let blur show through on iOS
+            ? 'transparent'
             : theme.colors.surfaceFrosted,
-          borderTopWidth: 0,
-          elevation: 12,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: theme.colors.border,
+          elevation: 8,
           shadowColor: theme.colors.shadow,
-          shadowOpacity: 0.12,
-          shadowOffset: { width: 0, height: -4 },
-          shadowRadius: 20,
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.15)',
-          overflow: 'hidden',
+          shadowOpacity: 0.05,
+          shadowOffset: { width: 0, height: -3 },
+          shadowRadius: 10,
         },
         tabBarBackground: () =>
           Platform.OS === 'ios' ? (
             <BlurView
               tint="light"
-              intensity={80}
-              style={StyleSheet.absoluteFill}
+              intensity={95}
+              style={[
+                StyleSheet.absoluteFill,
+                { backgroundColor: 'rgba(250, 247, 242, 0.72)' },
+              ]}
             />
           ) : (
             <View
@@ -55,9 +55,10 @@ export default function TabLayout() {
           fontFamily: 'Inter_600SemiBold',
           fontSize: 11,
           marginTop: 2,
+          letterSpacing: 0.1,
         },
         tabBarItemStyle: {
-          paddingVertical: 4,
+          paddingVertical: 2,
         },
       }}
     >

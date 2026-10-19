@@ -37,7 +37,7 @@ export function Screen({
     ...style,
   };
 
-  const extraBottomPadding = hasTabBar ? 100 + insets.bottom : (safeBottom ? insets.bottom : 0);
+  const extraBottomPadding = hasTabBar ? 92 : (safeBottom ? insets.bottom + 16 : 16);
 
   const content = (
     <Box flex={1} paddingHorizontal={padded ? 'm' : '0'}>

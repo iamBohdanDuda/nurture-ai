@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { MarkdownMessage } from './MarkdownMessage';
 
 /**
- * Custom chat bubble that renders blush pink for user and gray for AI with Markdown support
+ * Custom chat bubble that renders blush pink for user and gray/white for AI with Markdown support
  * and a minimal tool call hint pill above AI responses.
  */
 export function ChatBubble(props: BubbleProps<IMessage>) {
@@ -17,7 +17,9 @@ export function ChatBubble(props: BubbleProps<IMessage>) {
   const isMemoryHint = toolHint?.toLowerCase().includes('memory') || toolHint?.toLowerCase().includes('notes');
 
   return (
-    <View style={{ flex: 1 }}>
+    <View
+      style={{ flexShrink: 1, maxWidth: '100%', alignItems: isAI ? 'flex-start' : 'flex-end' }}
+    >
       {isAI && !!toolHint && (
         <View
           style={[
@@ -56,30 +58,32 @@ export function ChatBubble(props: BubbleProps<IMessage>) {
         wrapperStyle={{
           left: {
             backgroundColor: theme.colors.chatBubbleAI,
-            borderRadius: 16,
-            borderBottomLeftRadius: 4,
-            paddingVertical: 2,
-            paddingHorizontal: 2,
-            marginBottom: 4,
-            maxWidth: '85%',
+            borderRadius: 20,
+            borderBottomLeftRadius: 6,
+            paddingVertical: 4,
+            paddingHorizontal: 4,
+            marginBottom: 6,
+            maxWidth: '100%',
+            borderWidth: 1,
+            borderColor: theme.colors.border,
             shadowColor: theme.colors.shadow,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.05,
-            shadowRadius: 4,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.04,
+            shadowRadius: 6,
             elevation: 1,
           },
           right: {
             backgroundColor: theme.colors.chatBubbleUser,
-            borderRadius: 16,
-            borderBottomRightRadius: 4,
-            paddingVertical: 2,
-            paddingHorizontal: 2,
-            marginBottom: 4,
-            maxWidth: '85%',
+            borderRadius: 20,
+            borderBottomRightRadius: 6,
+            paddingVertical: 4,
+            paddingHorizontal: 4,
+            marginBottom: 6,
+            maxWidth: '100%',
             shadowColor: theme.colors.shadow,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.05,
-            shadowRadius: 4,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.04,
+            shadowRadius: 6,
             elevation: 1,
           },
         }}

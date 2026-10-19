@@ -245,60 +245,129 @@ export function MealScanner() {
       )}
 
       {/* Full History Modal */}
-      <Modal visible={isHistoryModalOpen} animationType="slide" presentationStyle="pageSheet">
+      <Modal visible={isHistoryModalOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setIsHistoryModalOpen(false)}>
         <Box flex={1} backgroundColor="mainBackground">
-          <Box padding="m" borderBottomWidth={1} borderColor="border" flexDirection="row" justifyContent="space-between" alignItems="center" paddingTop="2xl">
-            <Text variant="h3">Meal History</Text>
-            <Touchable onPress={() => setIsHistoryModalOpen(false)}>
-              <Ionicons name="close-circle" size={28} color={theme.colors.textMuted} />
+          {/* Modal Header */}
+          <Box
+            paddingHorizontal="m"
+            paddingVertical="m"
+            borderBottomWidth={1}
+            borderColor="border"
+            flexDirection="row"
+            justifyContent="space-between"
+            alignItems="center"
+            backgroundColor="surfaceElevated"
+          >
+            <Box flexDirection="row" alignItems="center">
+              <Box
+                width={36}
+                height={36}
+                borderRadius="full"
+                backgroundColor="warmSurfaceSoft"
+                alignItems="center"
+                justifyContent="center"
+                marginRight="s"
+              >
+                <Ionicons name="restaurant" size={18} color={theme.colors.primary} />
+              </Box>
+              <Box>
+                <Text variant="h3" color="textPrimary">Meal History</Text>
+                <Text variant="caption" color="textMuted">Logged meals & nutrition scans</Text>
+              </Box>
+            </Box>
+
+            <Touchable onPress={() => setIsHistoryModalOpen(false)} hitSlop={10} accessibilityLabel="Close meal history">
+              <Box
+                width={32}
+                height={32}
+                borderRadius="full"
+                backgroundColor="warmSurfaceSoft"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Ionicons name="close" size={18} color={theme.colors.textPrimary} />
+              </Box>
             </Touchable>
           </Box>
+
           <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-            {mealLogs.map((meal) => (
-              <Box
-                key={meal.id}
-                backgroundColor="surfaceElevated"
-                borderRadius="m"
-                padding="m"
-                borderWidth={1}
-                borderColor="border"
-              >
-                <Box flexDirection="row" justifyContent="space-between" alignItems="flex-start" marginBottom="xs">
-                  <Box flex={1} marginRight="s">
-                    <Text variant="body" fontFamily="Inter_700Bold">
-                      {meal.meal_name}
+            {mealLogs.length === 0 ? (
+              <Box alignItems="center" justifyContent="center" paddingVertical="2xl">
+                <Box
+                  width={56}
+                  height={56}
+                  borderRadius="full"
+                  backgroundColor="warmSurfaceSoft"
+                  alignItems="center"
+                  justifyContent="center"
+                  marginBottom="m"
+                >
+                  <Ionicons name="nutrition-outline" size={28} color={theme.colors.textMuted} />
+                </Box>
+                <Text variant="body" fontFamily="Inter_600SemiBold" color="textPrimary">
+                  No Meals Logged Yet
+                </Text>
+                <Text variant="caption" color="textMuted" textAlign="center" marginTop="xs" style={{ maxWidth: 240 }}>
+                  Snap a photo of your meal or log nutrition to see your daily breakdown here.
+                </Text>
+              </Box>
+            ) : (
+              mealLogs.map((meal) => (
+                <Box
+                  key={meal.id}
+                  backgroundColor="surfaceElevated"
+                  borderRadius="xl"
+                  padding="m"
+                  borderWidth={1}
+                  borderColor="border"
+                  style={{
+                    shadowColor: '#000',
+                    shadowOpacity: 0.03,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowRadius: 6,
+                    elevation: 1,
+                  }}
+                >
+                  <Box flexDirection="row" justifyContent="space-between" alignItems="flex-start" marginBottom="xs">
+                    <Box flex={1} marginRight="s">
+                      <Text variant="body" fontFamily="Inter_700Bold" color="textPrimary">
+                        {meal.meal_name}
+                      </Text>
+                    </Box>
+                    <Text variant="caption" color="textMuted">
+                      {formatLogTimestamp(meal.logged_at)}
                     </Text>
                   </Box>
-                  <Text variant="caption" color="textMuted">
-                    {formatLogTimestamp(meal.logged_at)}
-                  </Text>
-                </Box>
-                <Box
-                  backgroundColor="secondaryLight"
-                  alignSelf="flex-start"
-                  borderRadius="full"
-                  paddingHorizontal="s"
-                  paddingVertical="xs"
-                  marginBottom="s"
-                >
-                  <Text variant="caption" color="secondary" fontFamily="Inter_600SemiBold">
-                    {meal.calories} kcal
-                  </Text>
-                </Box>
-                {meal.description && (
-                  <Text variant="bodySmall" color="textSecondary" marginBottom="s">
-                    {meal.description}
-                  </Text>
-                )}
-                {(meal.protein_g !== undefined && meal.protein_g !== null) && (
-                  <Box flexDirection="row" gap="m" borderTopWidth={1} borderColor="border" paddingTop="s">
-                    <Text variant="caption" color="primary">Protein: {meal.protein_g}g</Text>
-                    <Text variant="caption" color="accent">Carbs: {meal.carbs_g}g</Text>
-                    <Text variant="caption" color="gold">Fat: {meal.fat_g}g</Text>
+
+                  <Box
+                    backgroundColor="secondaryLight"
+                    alignSelf="flex-start"
+                    borderRadius="full"
+                    paddingHorizontal="s"
+                    paddingVertical="xs"
+                    marginBottom="s"
+                  >
+                    <Text variant="caption" color="secondary" fontFamily="Inter_700Bold">
+                      {meal.calories} kcal
+                    </Text>
                   </Box>
-                )}
-              </Box>
-            ))}
+
+                  {meal.description && (
+                    <Text variant="bodySmall" color="textSecondary" marginBottom="s">
+                      {meal.description}
+                    </Text>
+                  )}
+
+                  {(meal.protein_g !== undefined && meal.protein_g !== null) && (
+                    <Box flexDirection="row" gap="m" borderTopWidth={1} borderColor="border" paddingTop="s">
+                      <Text variant="caption" color="primary" fontFamily="Inter_600SemiBold">Protein: {meal.protein_g}g</Text>
+                      <Text variant="caption" color="accent" fontFamily="Inter_600SemiBold">Carbs: {meal.carbs_g}g</Text>
+                      <Text variant="caption" color="gold" fontFamily="Inter_600SemiBold">Fat: {meal.fat_g}g</Text>
+                    </Box>
+                  )}
+                </Box>
+              ))
+            )}
           </ScrollView>
         </Box>
       </Modal>
