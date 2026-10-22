@@ -59,6 +59,7 @@
     "@types/react": "~19.2.2",
     "babel-preset-expo": "^55.0.13",
     "expo-mcp": "^0.2.4",
+    "supabase": "^2.121.0",
     "typescript": "~5.9.2"
   },
   "private": true
