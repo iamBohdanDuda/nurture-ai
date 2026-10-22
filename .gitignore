@@ -32,6 +32,9 @@ Thumbs.db
 *.log
 tsc_errors.txt
 
+# Supabase CLI link state
+supabase/.temp/
+
 # Temporary / Patch files
 *.orig.*
 *.rej

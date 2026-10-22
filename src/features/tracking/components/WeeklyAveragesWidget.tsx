@@ -1,4 +1,5 @@
 import React from 'react';
+import { format } from 'date-fns';
 import { useTheme } from '@shopify/restyle';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,13 +16,13 @@ export function WeeklyAveragesWidget() {
   const calculateAverages = () => {
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = format(now, 'yyyy-MM-dd');
 
     // 1. Calories: group by date (YYYY-MM-DD)
     const mealDaysMap = new Map<string, number>();
     mealLogs.forEach((m) => {
-      const dateStr = (m.logged_at || '').split('T')[0];
-      if (dateStr && new Date(dateStr) >= sevenDaysAgo) {
+      if (m.logged_at && new Date(m.logged_at) >= sevenDaysAgo) {
+        const dateStr = format(new Date(m.logged_at), 'yyyy-MM-dd');
         mealDaysMap.set(dateStr, (mealDaysMap.get(dateStr) || 0) + (m.calories || 0));
       }
     });

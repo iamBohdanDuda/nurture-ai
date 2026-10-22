@@ -206,19 +206,3 @@ CREATE POLICY "Users can delete own kick logs"
 
 CREATE INDEX idx_kick_logs_user_date
   ON public.kick_logs (user_id, logged_at DESC);
-
--- ============================================================
--- 7. Add tool_call_hint to chat_history (if missing)
--- ============================================================
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public'
-      AND table_name = 'chat_history'
-      AND column_name = 'tool_call_hint'
-  ) THEN
-    ALTER TABLE public.chat_history ADD COLUMN tool_call_hint TEXT;
-  END IF;
-END
-$$;

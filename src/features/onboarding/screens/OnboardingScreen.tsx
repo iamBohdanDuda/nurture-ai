@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { format } from 'date-fns';
 import { FlatList, Dimensions, ScrollView } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { router } from 'expo-router';
@@ -78,7 +79,7 @@ export function OnboardingScreen() {
         id: session.user.id,
         email: session.user.email ?? '',
         first_name: data.firstName,
-        pregnancy_start_date: startDate.toISOString().split('T')[0],
+        pregnancy_start_date: format(startDate, 'yyyy-MM-dd'),
         blood_type: data.bloodType || null,
         emergency_contact: data.emergencyContact || null,
       });

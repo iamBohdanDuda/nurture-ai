@@ -38,6 +38,24 @@ export function MealScanner() {
     setIsAnalyzing(false);
   };
 
+  const analyzeAndLog = async (base64: string) => {
+    if (!user?.id) return;
+    const meal = await trackingService.extractMealNutrition(base64);
+    const log = await trackingService.logMeal(
+      user.id,
+      meal.meal_name,
+      meal.description,
+      meal.calories,
+      meal.macros,
+      meal.is_pregnancy_safe,
+      meal.safety_analysis
+    );
+    addMealLog(log);
+    if (!meal.is_pregnancy_safe) {
+      Alert.alert('Pregnancy safety concern', meal.safety_analysis);
+    }
+  };
+
   const takePicture = async () => {
     if (!cameraRef.current) return;
     
@@ -50,23 +68,7 @@ export function MealScanner() {
       
       if (!photo?.base64 || !user?.id) throw new Error('Failed to take photo');
 
-      // Call AI Edge Function for Meal Nutrition & Description
-      const { calories, description, meal_name, macros } = await trackingService.extractMealNutrition(
-        user.id,
-        photo.base64
-      );
-
-      const log = await trackingService.logMeal(
-        user.id,
-        meal_name,
-        description,
-        calories,
-        macros,
-        true,
-        'Safe & nutritious during pregnancy.'
-      );
-
-      addMealLog(log);
+      await analyzeAndLog(photo.base64);
       closeCamera();
     } catch (err: any) {
       console.warn('Failed to scan meal:', err);
@@ -86,24 +88,7 @@ export function MealScanner() {
       });
 
       if (!result.canceled && result.assets[0].base64 && user?.id) {
-        const base64 = result.assets[0].base64;
-        
-        const { calories, description, meal_name, macros } = await trackingService.extractMealNutrition(
-          user.id,
-          base64
-        );
-
-        const log = await trackingService.logMeal(
-          user.id,
-          meal_name,
-          description,
-          calories,
-          macros,
-          true,
-          'Safe & nutritious during pregnancy.'
-        );
-
-        addMealLog(log);
+        await analyzeAndLog(result.assets[0].base64);
       }
     } catch (err: any) {
       console.warn('Failed to scan meal from gallery:', err);
@@ -238,6 +223,11 @@ export function MealScanner() {
                     {meal.description}
                   </Text>
                 )}
+                {meal.is_pregnancy_safe === false && (
+                  <Text variant="caption" color="error" fontFamily="Inter_600SemiBold" marginTop="xs" numberOfLines={2}>
+                    ⚠️ {meal.safety_analysis}
+                  </Text>
+                )}
               </Box>
             ))}
           </Box>
@@ -355,6 +345,12 @@ export function MealScanner() {
                   {meal.description && (
                     <Text variant="bodySmall" color="textSecondary" marginBottom="s">
                       {meal.description}
+                    </Text>
+                  )}
+
+                  {meal.is_pregnancy_safe === false && (
+                    <Text variant="bodySmall" color="error" fontFamily="Inter_600SemiBold" marginBottom="s">
+                      ⚠️ {meal.safety_analysis}
                     </Text>
                   )}
 

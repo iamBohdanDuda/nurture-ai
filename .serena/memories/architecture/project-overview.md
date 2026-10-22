@@ -7,21 +7,21 @@ AI-driven pregnancy assistant mobile app.
 - **Framework:** Expo SDK 55 (React Native, latest stable Feb 2026)
 - **Routing:** expo-router v4 (file-based)
 - **UI/Styling:** @shopify/restyle (type-safe theme tokens)
-- **State Management:** Zustand 5.x (slice pattern, persisted via MMKV)
-- **Local Cache:** react-native-mmkv 3.x (synchronous, C++ JSI)
+- **State Management:** Zustand 5.x (slice pattern, persisted via AsyncStorage)
+- **Local Cache:** AsyncStorage (stores + local-first chat cache); Supabase session in expo-secure-store (chunked adapter in `src/config/supabase.ts`)
 - **Data Fetching:** @tanstack/react-query 5.x (server state)
 - **Chat UI:** react-native-gifted-chat v3.3.2 (full TS rewrite)
 - **Animations:** react-native-reanimated v3 (custom animations, NO Lottie)
 - **Backend:** Supabase (Auth, PostgreSQL, Storage, Edge Functions)
 - **Monetization:** RevenueCat (react-native-purchases)
-- **AI:** LLM via Supabase Edge Functions (GPT-4o-mini / Gemini Flash)
+- **AI:** server-side only, via Supabase Edge Functions: `chat-orchestrator` (Gemini default; Groq/OpenAI optional, model allowlist), `meal-scanner` (Gemini, structured output incl. pregnancy safety), `delete-account`. The client holds no LLM keys and calls them with `invokeFunction()` from `src/config/supabase.ts`.
 
 ## Architecture Pattern
 - Feature-based module organization in `src/features/`
 - Thin routing layer in `app/` (expo-router re-exports feature screens)
 - Domain-isolated Zustand stores in `src/stores/`
 - TanStack Query for server state, Zustand for client state
-- MMKV for persistence (30-100x faster than AsyncStorage)
+- AsyncStorage for persistence; sign-out wipes it (`authService.clearLocalData`) except UI prefs
 
 ## Key Features
 1. Auth + Onboarding (pregnancy date capture)

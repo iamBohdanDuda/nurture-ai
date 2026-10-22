@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import { StyleSheet, View, ScrollView, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Constants, { ExecutionEnvironment } from 'expo-constants';
-import RevenueCatUI from 'react-native-purchases-ui';
+import Purchases from 'react-native-purchases';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@shopify/restyle';
@@ -46,7 +45,6 @@ export default function PaywallScreen() {
   const theme = useTheme<Theme>();
   const insets = useSafeAreaInsets();
   const setTier = useSubscriptionStore((s) => s.setTier);
-  const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
   const [selectedPlan, setSelectedPlan] = useState<'annual' | 'monthly'>('annual');
 
@@ -54,9 +52,39 @@ export default function PaywallScreen() {
     router.back();
   };
 
-  const handleActivatePro = () => {
-    setTier('premium');
-    handleDismiss();
+  // Tier only ever comes from RevenueCat's active entitlements, never from a button press.
+  const syncTier = async () => {
+    const info = await Purchases.getCustomerInfo();
+    const isPro = Object.keys(info.entitlements.active).length > 0;
+    setTier(isPro ? 'premium' : 'free');
+    return isPro;
+  };
+
+  const handleSubscribe = async () => {
+    try {
+      // ponytail: dev-only shortcut to preview Pro UI when RevenueCat isn't configured
+      if (__DEV__ && !(await Purchases.isConfigured())) {
+        setTier('premium');
+        return handleDismiss();
+      }
+      const offering = (await Purchases.getOfferings()).current;
+      const pkg = selectedPlan === 'annual' ? offering?.annual : offering?.monthly;
+      if (!pkg) throw new Error('This plan is not available right now.');
+      await Purchases.purchasePackage(pkg);
+      if (await syncTier()) handleDismiss();
+    } catch (err: any) {
+      if (!err?.userCancelled) Alert.alert('Purchase failed', err?.message ?? 'Please try again later.');
+    }
+  };
+
+  const handleRestore = async () => {
+    try {
+      await Purchases.restorePurchases();
+      if (await syncTier()) return handleDismiss();
+      Alert.alert('No subscription found', 'There is no active Nurture Pro subscription for this account.');
+    } catch (err: any) {
+      Alert.alert('Restore failed', err?.message ?? 'Please try again later.');
+    }
   };
 
   // If in custom preview (or Expo Go), render the bespoke high-craft design
@@ -320,7 +348,7 @@ export default function PaywallScreen() {
                 ? 'Start 7-Day Free Trial'
                 : 'Subscribe for $8.99/month'
             }
-            onPress={handleActivatePro}
+            onPress={handleSubscribe}
             variant="primary"
             size="lg"
           />
@@ -365,7 +393,7 @@ export default function PaywallScreen() {
           gap="m"
           marginTop="s"
         >
-          <Touchable onPress={handleActivatePro}>
+          <Touchable onPress={handleRestore}>
             <Text variant="caption" color="textMuted" style={{ fontSize: 11, textDecorationLine: 'underline' }}>
               Restore Purchases
             </Text>

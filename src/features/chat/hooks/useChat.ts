@@ -158,7 +158,9 @@ export function useChat() {
         // Add error message
         const errorMsg: ChatMessageUI = {
           _id: `error-${Date.now()}`,
-          text: "I'm sorry, I couldn't process your message. Please try again.",
+          text: error?.message === 'free_limit_reached'
+            ? "You've used this week's free messages. Upgrade to Nurture Pro for unlimited chats."
+            : "I'm sorry, I couldn't process your message. Please try again.",
           createdAt: new Date(),
           user: AI_USER,
         };
