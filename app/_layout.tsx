@@ -11,6 +11,9 @@ import {
 } from '@expo-google-fonts/inter';
 import { Providers } from '@/core/providers';
 
+// Debug logs include user ids and health details; keep them out of release builds (warn/error stay)
+if (!__DEV__) console.log = () => {};
+
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 

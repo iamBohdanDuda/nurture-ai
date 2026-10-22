@@ -1,6 +1,12 @@
-import { supabase } from '@/config/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase, invokeFunction } from '@/config/supabase';
 import { type User } from '@/types/database';
+import { STORAGE_KEYS } from '@/core/constants';
 import { useAuthStore } from '@/stores/authStore';
+import { useChatStore } from '@/stores/chatStore';
+import { useTrackingStore } from '@/stores/trackingStore';
+import { useSubscriptionStore } from '@/stores/subscriptionStore';
+import { useOnboardingStore } from '@/stores/onboardingStore';
 
 export const authService = {
   async signInWithEmail(email: string, password: string) {
@@ -27,6 +33,20 @@ export const authService = {
     console.log(`[DB: authService] SIGN OUT`);
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
+    await this.clearLocalData();
+  },
+
+  /**
+   * Wipes this device's cached chats, memory and health data so the next account can't see them.
+   * Keeps only UI preferences.
+   */
+  async clearLocalData() {
+    const keys = (await AsyncStorage.getAllKeys()).filter((k) => k !== STORAGE_KEYS.UI);
+    await AsyncStorage.multiRemove(keys);
+    useChatStore.setState(useChatStore.getInitialState(), true);
+    useTrackingStore.setState(useTrackingStore.getInitialState(), true);
+    useSubscriptionStore.setState(useSubscriptionStore.getInitialState(), true);
+    useOnboardingStore.setState(useOnboardingStore.getInitialState(), true);
   },
 
   async getSession() {
@@ -124,16 +144,14 @@ export const authService = {
     if (error) throw error;
   },
 
-  async deleteAccount(userId: string) {
-    console.log(`[DB: authService] DELETE ALL user data (user: ${userId})`);
-    try {
-      await supabase.from('chat_history').delete().eq('user_id', userId);
-      await supabase.from('user_memory').delete().eq('user_id', userId);
-      await supabase.from('users').delete().eq('id', userId);
-    } catch (err) {
-      console.warn('Account row deletion notice:', err);
-    } finally {
-      await supabase.auth.signOut();
-    }
+  /**
+   * Deletes the auth user and all their data server-side (delete-account Edge Function),
+   * then clears this device. Throws if the server delete fails, so the user isn't told it worked.
+   */
+  async deleteAccount() {
+    console.log('[DB: authService] DELETE account');
+    await invokeFunction('delete-account', {});
+    await supabase.auth.signOut({ scope: 'local' });
+    await this.clearLocalData();
   },
 };

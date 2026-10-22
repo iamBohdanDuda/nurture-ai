@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { format } from 'date-fns';
 import { Alert, Modal, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -80,7 +81,7 @@ export default function SettingsScreen() {
     if (!user?.id) return;
     try {
       setIsSavingDate(true);
-      const formattedDate = selectedDate.toISOString().split('T')[0];
+      const formattedDate = format(selectedDate, 'yyyy-MM-dd');
       const updated = await authService.updateUserProfile(user.id, {
         pregnancy_start_date: formattedDate,
       });

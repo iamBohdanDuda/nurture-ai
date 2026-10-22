@@ -39,8 +39,6 @@ export function useRevenueCat() {
       }
 
       try {
-        Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
-
         if (isTestStore) {
           console.log(`🚀 RevenueCat Test Store mode initialized with key: ${apiKey.slice(0, 8)}...`);
         }
@@ -52,13 +50,8 @@ export function useRevenueCat() {
         }
 
         const customerInfo = await Purchases.getCustomerInfo();
-        const activeEntitlements = customerInfo.entitlements.active;
-        const isPro =
-          typeof activeEntitlements['Nurture Pro'] !== 'undefined' ||
-          typeof activeEntitlements['nurture_pro'] !== 'undefined' ||
-          typeof activeEntitlements['FOP Bohdan Pro'] !== 'undefined' ||
-          typeof activeEntitlements['pro'] !== 'undefined' ||
-          typeof activeEntitlements['premium'] !== 'undefined';
+        // Every entitlement in this app unlocks Pro (same rule as the chat-orchestrator edge function)
+        const isPro = Object.keys(customerInfo.entitlements.active).length > 0;
 
         setTier(isPro ? 'premium' : 'free');
       } catch (e) {

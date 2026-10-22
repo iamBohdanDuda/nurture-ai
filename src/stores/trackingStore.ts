@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { format } from 'date-fns';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { asyncStorage } from './middleware/asyncStorage';
 import { STORAGE_KEYS } from '@/core/constants';
@@ -35,7 +36,8 @@ interface TrackingState {
   checkAndResetIfNewDay: () => void;
 }
 
-const getToday = () => new Date().toISOString().split('T')[0];
+// Local calendar day, so daily totals reset at the user's midnight rather than UTC's
+const getToday = () => format(new Date(), 'yyyy-MM-dd');
 
 export const useTrackingStore = create<TrackingState>()(
   persist(

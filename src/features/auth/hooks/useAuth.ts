@@ -62,9 +62,7 @@ export function useAuth() {
   const deleteAccount = useCallback(async () => {
     try {
       setLocalLoading(true);
-      if (user?.id) {
-        await authService.deleteAccount(user.id);
-      }
+      await authService.deleteAccount();
       clearStore();
     } catch (err: any) {
       setError(err.message ?? 'Delete account failed');
@@ -72,7 +70,7 @@ export function useAuth() {
     } finally {
       setLocalLoading(false);
     }
-  }, [user?.id, clearStore]);
+  }, [clearStore]);
 
   return {
     user,
