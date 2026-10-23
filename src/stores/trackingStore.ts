@@ -31,13 +31,17 @@ interface TrackingState {
   addSymptomLog: (log: SymptomLog) => void;
   addMealLog: (log: MealLog) => void;
   addKickLog: (log: KickLog) => void;
-  addHydrationLog: (log: HydrationLog) => void;
   resetDaily: () => void;
   checkAndResetIfNewDay: () => void;
 }
 
 // Local calendar day, so daily totals reset at the user's midnight rather than UTC's
 const getToday = () => format(new Date(), 'yyyy-MM-dd');
+
+// ponytail: on-device history is capped (the whole store is persisted and re-rendered);
+// the server keeps everything. Load history from Supabase if older days must show here.
+const MAX_LOGS = 500;
+const prepend = <T>(log: T, logs: T[]) => [log, ...logs].slice(0, MAX_LOGS);
 
 export const useTrackingStore = create<TrackingState>()(
   persist(
@@ -69,7 +73,7 @@ export const useTrackingStore = create<TrackingState>()(
         };
         set((state) => ({
           todayWater: state.todayWater + ml,
-          hydrationLogs: [newLog, ...state.hydrationLogs],
+          hydrationLogs: prepend(newLog, state.hydrationLogs),
         }));
       },
 
@@ -107,24 +111,19 @@ export const useTrackingStore = create<TrackingState>()(
 
       addSymptomLog: (log) =>
         set((state) => ({
-          symptomLogs: [log, ...state.symptomLogs],
+          symptomLogs: prepend(log, state.symptomLogs),
           todaySymptoms: Array.from(new Set([log.symptom_name, ...state.todaySymptoms])),
         })),
 
       addMealLog: (log) =>
         set((state) => ({
-          mealLogs: [log, ...state.mealLogs],
+          mealLogs: prepend(log, state.mealLogs),
           todayCalories: state.todayCalories + log.calories,
         })),
 
       addKickLog: (log) =>
         set((state) => ({
-          kickLogs: [log, ...state.kickLogs],
-        })),
-
-      addHydrationLog: (log) =>
-        set((state) => ({
-          hydrationLogs: [log, ...state.hydrationLogs],
+          kickLogs: prepend(log, state.kickLogs),
         })),
 
       resetDaily: () => {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TextInput, Keyboard } from 'react-native';
+import { TextInput, Keyboard, Alert } from 'react-native';
 import { useTheme } from '@shopify/restyle';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,13 +26,14 @@ export function WeightLogger() {
 
     setIsSaving(true);
     Keyboard.dismiss();
-    logWeight(w);
 
     if (user?.id) {
       try {
         await trackingService.logWeight(user.id, w, currentWeek);
+        logWeight(w);
       } catch (err) {
-        console.warn('Failed to sync weight log', err);
+        console.warn('Failed to save weight log', err);
+        Alert.alert('Not saved', 'Could not save your weight. Check your connection and try again.');
       }
     }
     setIsSaving(false);

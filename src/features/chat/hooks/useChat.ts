@@ -72,23 +72,6 @@ export function useChat() {
     }
   }, [memoryMd, setUserMemory]);
 
-  // Auto-preserve active chat session locally if messages exist
-  useEffect(() => {
-    if (activeChatId && localMessages.length > 0) {
-      const userMsg = localMessages.find((m) => m.user._id === CURRENT_USER_ID);
-      const title = userMsg?.text
-        ? userMsg.text.substring(0, 34).trim() + (userMsg.text.length > 34 ? '...' : '')
-        : 'Pregnancy Consultation';
-      chatService.saveLocalChat(userId || 'current-user', {
-        id: activeChatId,
-        user_id: userId || 'current-user',
-        title,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-    }
-  }, [activeChatId, localMessages.length, userId]);
-
   const showSuggestions = localMessages.length === 0 && !isLoadingHistory;
 
   /**
@@ -117,7 +100,6 @@ export function useChat() {
       };
 
       setLocalMessages((prev) => [userMsg, ...prev]);
-      incrementMessageCount();
       setStreaming(true);
       isMidSendRef.current = true;
       console.log('[useChat] Streaming set to true, calling sendMessage...');
@@ -140,6 +122,8 @@ export function useChat() {
         });
 
         console.log('[useChat] AI response received:', aiResponse?.content?.substring(0, 80));
+        // Counted only when answered, like the server counter
+        incrementMessageCount();
 
         // If AI updated memory notes, sync immediately to store
         if (

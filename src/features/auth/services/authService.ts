@@ -1,8 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, invokeFunction } from '@/config/supabase';
 import { type User } from '@/types/database';
-import { STORAGE_KEYS } from '@/core/constants';
-import { useAuthStore } from '@/stores/authStore';
 import { useChatStore } from '@/stores/chatStore';
 import { useTrackingStore } from '@/stores/trackingStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
@@ -36,13 +34,9 @@ export const authService = {
     await this.clearLocalData();
   },
 
-  /**
-   * Wipes this device's cached chats, memory and health data so the next account can't see them.
-   * Keeps only UI preferences.
-   */
+  /** Wipes this device's cached chats, memory and health data so the next account can't see them. */
   async clearLocalData() {
-    const keys = (await AsyncStorage.getAllKeys()).filter((k) => k !== STORAGE_KEYS.UI);
-    await AsyncStorage.multiRemove(keys);
+    await AsyncStorage.multiRemove(await AsyncStorage.getAllKeys());
     useChatStore.setState(useChatStore.getInitialState(), true);
     useTrackingStore.setState(useTrackingStore.getInitialState(), true);
     useSubscriptionStore.setState(useSubscriptionStore.getInitialState(), true);
@@ -74,63 +68,31 @@ export const authService = {
     blood_type?: string | null;
     emergency_contact?: string | null;
   }) {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .insert(profile)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    } catch (err: any) {
-      if (err?.message?.includes('blood_type') || err?.message?.includes('emergency_contact') || err?.code === 'PGRST204') {
-        console.warn('Supabase users table missing blood_type/emergency_contact column, stripping fields for remote save:', err.message);
-        const { blood_type, emergency_contact, ...fallbackProfile } = profile;
-        const { data } = await supabase
-          .from('users')
-          .insert(fallbackProfile)
-          .select()
-          .single();
-        return { ...(data || fallbackProfile), blood_type: profile.blood_type ?? null, emergency_contact: profile.emergency_contact ?? null } as User;
-      }
-      throw err;
+    const { data, error } = await supabase
+      .from('users')
+      .insert(profile)
+      .select()
+      .single();
+    // A killed earlier attempt already created the row. Update it instead: upsert would need
+    // UPDATE on id/email, which clients don't have (20260807000002_lock_users_billing_columns).
+    if (error?.code === '23505') {
+      const { id, email, ...fields } = profile;
+      return this.updateUserProfile(id, fields);
     }
+    if (error) throw error;
+    return data;
   },
 
   async updateUserProfile(userId: string, updates: Partial<User>) {
     console.log(`[DB: authService] UPDATE users (user: ${userId})`);
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .update(updates)
-        .eq('id', userId)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    } catch (err: any) {
-      if (err?.message?.includes('blood_type') || err?.message?.includes('emergency_contact') || err?.code === 'PGRST204') {
-        console.warn('Supabase users table missing blood_type/emergency_contact column, performing local update:', err.message);
-        const { blood_type, emergency_contact, ...safeUpdates } = updates;
-        let remoteData = null;
-        if (Object.keys(safeUpdates).length > 0) {
-          const { data } = await supabase
-            .from('users')
-            .update(safeUpdates)
-            .eq('id', userId)
-            .select()
-            .single();
-          remoteData = data;
-        }
-        const currentUser = useAuthStore.getState().user;
-        return {
-          ...(currentUser || {}),
-          ...(remoteData || {}),
-          ...updates,
-        } as User;
-      }
-      throw err;
-    }
+    const { data, error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
   },
 
   async initUserMemory(userId: string) {

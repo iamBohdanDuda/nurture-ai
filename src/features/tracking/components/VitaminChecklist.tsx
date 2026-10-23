@@ -33,7 +33,8 @@ export function VitaminChecklist() {
     if (user?.id && isAdding) {
       trackingService.logVitamin(user.id, vitaminName).catch((err) => {
         console.warn('Failed to sync vitamin log', err);
-        Alert.alert('Sync Error', 'Failed to save vitamin log to the cloud.');
+        toggleVitamin(vitaminId); // undo the tick, it wasn't saved
+        Alert.alert('Not saved', 'Could not save this vitamin. Check your connection and try again.');
       });
     }
   };

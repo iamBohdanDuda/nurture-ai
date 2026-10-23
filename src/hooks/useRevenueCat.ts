@@ -55,8 +55,9 @@ export function useRevenueCat() {
 
         setTier(isPro ? 'premium' : 'free');
       } catch (e) {
+        // Keep the last known tier: offline at launch shouldn't demote a paying user.
+        // The server checks RevenueCat itself, so a stale "premium" can't unlock anything.
         console.warn('RevenueCat Purchases configuration notice:', e);
-        setTier('free');
       }
     }
 

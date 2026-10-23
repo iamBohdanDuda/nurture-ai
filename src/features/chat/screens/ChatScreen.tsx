@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, ActivityIndicator, Alert, Modal, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { GiftedChat, Message, type IMessage } from 'react-native-gifted-chat';
-import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@shopify/restyle';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -84,41 +83,6 @@ export function ChatScreen() {
 
     handleSend([msg]);
     setInputText('');
-  }, [inputText, handleSend]);
-
-  const onPickImage = useCallback(async () => {
-    try {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert(
-          'Permission needed',
-          'Please allow access to your photos to share meal images.'
-        );
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        quality: 0.8,
-        allowsEditing: true,
-        aspect: [4, 3],
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        const msg: ChatMessageUI = {
-          _id: `img-${Date.now()}`,
-          text: inputText.trim() || 'What can you tell me about this meal?',
-          createdAt: new Date(),
-          user: { _id: CURRENT_USER_ID },
-          image: result.assets[0].uri,
-        };
-
-        handleSend([msg]);
-        setInputText('');
-      }
-    } catch (err) {
-      console.error('Image picker error:', err);
-    }
   }, [inputText, handleSend]);
 
   const renderFooter = useCallback(() => {
@@ -416,7 +380,6 @@ export function ChatScreen() {
           text={inputText}
           onChangeText={setInputText}
           onSend={onSend}
-          onImagePress={onPickImage}
           disabled={!canSendMessage}
           isSending={isSending}
         />

@@ -10,7 +10,7 @@ import { type Theme, GRADIENTS } from '@/theme/theme';
 
 export function WeeklyAveragesWidget() {
   const theme = useTheme<Theme>();
-  const { todayWater, todayCalories, todayWeight, kickLogs, mealLogs } = useTrackingStore();
+  const { todayCalories, todayWeight, kickLogs, mealLogs, hydrationLogs } = useTrackingStore();
 
   // Compute 7-day metrics based on stored logs
   const calculateAverages = () => {
@@ -37,11 +37,14 @@ export function WeeklyAveragesWidget() {
       ? `${Math.round(totalLoggedCal / activeMealDaysCount)}`
       : '—';
 
-    // 2. Water: group by logged days or today
+    // 2. Water: group by date like calories
     const waterDaysMap = new Map<string, number>();
-    if (todayWater > 0) {
-      waterDaysMap.set(todayStr, todayWater);
-    }
+    hydrationLogs.forEach((h) => {
+      if (h.logged_at && new Date(h.logged_at) >= sevenDaysAgo) {
+        const dateStr = format(new Date(h.logged_at), 'yyyy-MM-dd');
+        waterDaysMap.set(dateStr, (waterDaysMap.get(dateStr) || 0) + (h.amount_ml || 0));
+      }
+    });
 
     const totalLoggedWater = Array.from(waterDaysMap.values()).reduce((a, b) => a + b, 0);
     const activeWaterDaysCount = waterDaysMap.size;
@@ -56,7 +59,7 @@ export function WeeklyAveragesWidget() {
       ? `${Math.round(totalKicks / recentKicks.length)}`
       : '—';
 
-    // 4. Weight
+    // 4. Weight: only today's entry lives on the device, so it isn't an average
     const avgWeightText = todayWeight ? `${todayWeight.toFixed(1)} kg` : '—';
 
     return {
@@ -73,7 +76,7 @@ export function WeeklyAveragesWidget() {
   const metrics = [
     { label: 'Avg Water', value: averages.avgWater, unit: 'ml/day', icon: 'water-outline' as const, color: theme.colors.info },
     { label: 'Avg Calories', value: averages.avgCal, unit: 'kcal/day', icon: 'restaurant-outline' as const, color: theme.colors.secondary },
-    { label: 'Avg Weight', value: averages.avgWeight, unit: '', icon: 'fitness-outline' as const, color: theme.colors.accent },
+    { label: 'Weight Today', value: averages.avgWeight, unit: '', icon: 'fitness-outline' as const, color: theme.colors.accent },
     { label: 'Avg Kicks', value: averages.avgKicks, unit: '/ session', icon: 'hand-left-outline' as const, color: theme.colors.primary },
   ];
 

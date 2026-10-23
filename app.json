@@ -49,7 +49,6 @@
         }
       ],
       "expo-image",
-      "expo-sharing",
       [
         "expo-camera",
         {

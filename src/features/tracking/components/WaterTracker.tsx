@@ -1,4 +1,5 @@
 import React from 'react';
+import { Alert } from 'react-native';
 import { useTheme } from '@shopify/restyle';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,11 +23,14 @@ export function WaterTracker() {
   const glasses = Math.floor(todayWater / WATER_GLASS_SIZE);
 
   const handleAddWater = async () => {
-    logWater(WATER_GLASS_SIZE);
-    const userId = user?.id || 'current-user';
-    trackingService.logWater(userId, WATER_GLASS_SIZE).catch((err) => {
-      console.warn('Failed to sync water log', err);
-    });
+    if (!user?.id) return;
+    try {
+      await trackingService.logWater(user.id, WATER_GLASS_SIZE);
+      logWater(WATER_GLASS_SIZE);
+    } catch (err) {
+      console.warn('Failed to save water log', err);
+      Alert.alert('Not saved', 'Could not save this glass of water. Check your connection and try again.');
+    }
   };
 
   return (

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Alert } from 'react-native';
 import { useTheme } from '@shopify/restyle';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -47,13 +48,19 @@ export function SymptomLogger() {
     const symptomNameClean = activeSymptom.split(' ')[0];
 
     if (user?.id) {
-      const log = await trackingService.logSymptom(
-        user.id,
-        symptomNameClean,
-        selectedSeverity,
-        currentWeek
-      );
-      addSymptomLog(log);
+      try {
+        const log = await trackingService.logSymptom(
+          user.id,
+          symptomNameClean,
+          selectedSeverity,
+          currentWeek
+        );
+        addSymptomLog(log);
+      } catch (err) {
+        console.warn('Failed to save symptom log', err);
+        Alert.alert('Not saved', 'Could not save this symptom. Check your connection and try again.');
+        return;
+      }
     }
     setActiveSymptom(null);
   };

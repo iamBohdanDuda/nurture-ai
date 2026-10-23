@@ -10,7 +10,6 @@ interface ChatInputBarProps {
   text: string;
   onChangeText: (text: string) => void;
   onSend: () => void;
-  onImagePress: () => void;
   disabled: boolean;
   isSending: boolean;
 }
@@ -22,7 +21,6 @@ export function ChatInputBar({
   text,
   onChangeText,
   onSend,
-  onImagePress,
   disabled,
   isSending,
 }: ChatInputBarProps) {
@@ -47,33 +45,7 @@ export function ChatInputBar({
           },
         ]}
       >
-        {/* Camera attach button */}
-        <Pressable
-          onPress={onImagePress}
-          disabled={disabled}
-          style={[styles.iconButton, { opacity: disabled ? 0.4 : 1 }]}
-        >
-          <View
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: theme.colors.warmSurfaceSoft,
-              borderWidth: 1,
-              borderColor: theme.colors.border,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Ionicons
-              name="camera"
-              size={19}
-              color={theme.colors.primary}
-            />
-          </View>
-        </Pressable>
-
-        {/* Text input */}
+        {/* Text only: the chat model never receives images; meal photos go through the Meal Scanner */}
         <TextInput
           value={text}
           onChangeText={onChangeText}
@@ -146,18 +118,13 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     minHeight: 52,
   },
-  iconButton: {
-    padding: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-    alignSelf: 'center',
-  },
   textInput: {
     flex: 1,
     fontSize: 16,
     lineHeight: 20,
     maxHeight: 120,
-    paddingHorizontal: 8,
+    paddingLeft: 14,
+    paddingRight: 8,
     paddingTop: 8,
     paddingBottom: 8,
     textAlignVertical: 'center',

@@ -128,33 +128,18 @@ export const chatService = {
   },
 
   /**
-   * Create a new chat session. Uses the remote row when available, else a local-only session.
+   * Create a new chat session. Throws when the server insert fails: a local-only chat id
+   * can never sync (chat_history.chat_id must reference a real chats row).
    */
   async createChat(userId: string, title: string): Promise<ChatSession> {
     console.log(`[DB: chatService] INSERT into chats (user: ${userId}, title: ${title})`);
-    let chat: ChatSession = {
-      id: `chat-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      user_id: userId,
-      title,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    const { data: chat, error } = await supabase
+      .from('chats')
+      .insert({ user_id: userId, title })
+      .select()
+      .single();
+    if (error) throw error;
 
-    try {
-      const { data, error } = await supabase
-        .from('chats')
-        .insert({ user_id: userId, title })
-        .select()
-        .single();
-
-      if (!error && data) {
-        chat = data;
-      }
-    } catch (err: any) {
-      console.warn('[ChatService] createChat remote failed, using local session:', err?.message || err);
-    }
-
-    // Save once, under the id we return, so the list never holds a local twin of a remote chat
     await this.saveLocalChat(userId, chat);
     return chat;
   },

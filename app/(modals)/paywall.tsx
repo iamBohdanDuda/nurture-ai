@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, ScrollView, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Purchases from 'react-native-purchases';
+import Purchases, { type PurchasesOffering } from 'react-native-purchases';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@shopify/restyle';
@@ -47,6 +47,27 @@ export default function PaywallScreen() {
   const setTier = useSubscriptionStore((s) => s.setTier);
 
   const [selectedPlan, setSelectedPlan] = useState<'annual' | 'monthly'>('annual');
+  const [offering, setOffering] = useState<PurchasesOffering | null>(null);
+
+  useEffect(() => {
+    Purchases.getOfferings()
+      .then((o) => setOffering(o.current))
+      .catch(() => {}); // not configured (Expo Go / dev): keep the preview prices
+  }, []);
+
+  // Prices and trial come from the store; the fallbacks only preview the design without RevenueCat
+  const annual = offering?.annual?.product;
+  const monthly = offering?.monthly?.product;
+  const annualPrice = annual?.priceString ?? '$59.99';
+  const annualPerMonth = annual?.pricePerMonthString ?? '$4.99';
+  const monthlyPrice = monthly?.priceString ?? '$8.99';
+  const savePercent = annual && monthly ? Math.round((1 - annual.price / (monthly.price * 12)) * 100) : 45;
+  const intro = annual?.introPrice;
+  const trial = !offering
+    ? '7 days'
+    : intro?.price === 0
+      ? `${intro.periodNumberOfUnits} ${intro.periodUnit.toLowerCase()}${intro.periodNumberOfUnits === 1 ? '' : 's'}`
+      : null;
 
   const handleDismiss = () => {
     router.back();
@@ -259,34 +280,36 @@ export default function PaywallScreen() {
                       <Text variant="body" fontFamily="Inter_700Bold" color="textPrimary">
                         Annual Access
                       </Text>
-                      <Box
-                        backgroundColor="peachSubtle"
-                        borderRadius="full"
-                        paddingHorizontal="s"
-                        paddingVertical="xs"
-                      >
-                        <Text
-                          variant="caption"
-                          color="coral"
-                          fontFamily="Inter_700Bold"
-                          style={{ fontSize: 9 }}
+                      {savePercent > 0 && (
+                        <Box
+                          backgroundColor="peachSubtle"
+                          borderRadius="full"
+                          paddingHorizontal="s"
+                          paddingVertical="xs"
                         >
-                          SAVE 45%
-                        </Text>
-                      </Box>
+                          <Text
+                            variant="caption"
+                            color="coral"
+                            fontFamily="Inter_700Bold"
+                            style={{ fontSize: 9 }}
+                          >
+                            SAVE {savePercent}%
+                          </Text>
+                        </Box>
+                      )}
                     </Box>
                     <Text variant="caption" color="textMuted" marginTop="xs">
-                      $4.99 / month · Billed $59.99 annually
+                      {annualPerMonth} / month · Billed {annualPrice} annually
                     </Text>
                   </Box>
                 </Box>
 
                 <Box alignItems="flex-end">
                   <Text variant="body" fontFamily="Inter_700Bold" color="primaryDark">
-                    7 Days Free
+                    {trial ? `${trial} free` : annualPrice}
                   </Text>
                   <Text variant="caption" color="textMuted">
-                    Then $59.99/yr
+                    {trial ? `Then ${annualPrice}/yr` : 'per year'}
                   </Text>
                 </Box>
               </Box>
@@ -329,7 +352,7 @@ export default function PaywallScreen() {
 
                 <Box alignItems="flex-end">
                   <Text variant="body" fontFamily="Inter_700Bold" color="textPrimary">
-                    $8.99
+                    {monthlyPrice}
                   </Text>
                   <Text variant="caption" color="textMuted">
                     per month
@@ -345,8 +368,8 @@ export default function PaywallScreen() {
           <Button
             title={
               selectedPlan === 'annual'
-                ? 'Start 7-Day Free Trial'
-                : 'Subscribe for $8.99/month'
+                ? trial ? 'Start Free Trial' : `Subscribe for ${annualPrice}/year`
+                : `Subscribe for ${monthlyPrice}/month`
             }
             onPress={handleSubscribe}
             variant="primary"

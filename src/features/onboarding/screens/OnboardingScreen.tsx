@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { format } from 'date-fns';
-import { FlatList, Dimensions, ScrollView } from 'react-native';
+import { FlatList, Dimensions, ScrollView, Alert } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -89,8 +89,9 @@ export function OnboardingScreen() {
       setOnboardingComplete(true);
       complete();
       router.replace('/(tabs)/home');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Onboarding completion failed:', err);
+      Alert.alert('Could not finish setup', err?.message ?? 'Please check your connection and try again.');
     }
   };
 

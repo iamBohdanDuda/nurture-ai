@@ -23,12 +23,7 @@ const MealAnalysisSchema = z.object({
 });
 export type MealAnalysis = z.infer<typeof MealAnalysisSchema>;
 
-function logNotice(tableName: string, error?: { message?: string } | null) {
-  if (!error) return;
-  if (error.message?.includes('schema cache') || error.message?.includes('404')) return;
-  console.warn(`[TrackingService] ${tableName} notice:`, error.message);
-}
-
+// Log methods throw on failure: a log that only lives on the device looks saved, then vanishes at sign-out.
 export const trackingService = {
   /**
    * Log Symptom with Severity (1-5), Week & ISO Timestamp
@@ -54,16 +49,8 @@ export const trackingService = {
       .select()
       .single();
 
-    logNotice('symptom_logs', error);
-    return data ?? ({
-      id: `sym-${Date.now()}`,
-      user_id: userId,
-      symptom_name: symptomName,
-      severity,
-      pregnancy_week: pregnancyWeek,
-      notes: notes ?? null,
-      logged_at: new Date().toISOString(),
-    } as SymptomLog);
+    if (error) throw error;
+    return data;
   },
 
   /**
@@ -98,21 +85,8 @@ export const trackingService = {
       .select()
       .single();
 
-    logNotice('meal_logs', error);
-    return data ?? ({
-      id: `meal-${Date.now()}`,
-      user_id: userId,
-      meal_name: mealName,
-      description,
-      calories,
-      protein_g: macros?.protein ?? null,
-      carbs_g: macros?.carbs ?? null,
-      fat_g: macros?.fat ?? null,
-      is_pregnancy_safe: isSafe,
-      safety_analysis: safetyAnalysis ?? null,
-      photo_url: photoUrl ?? null,
-      logged_at: new Date().toISOString(),
-    } as MealLog);
+    if (error) throw error;
+    return data;
   },
 
   /**
@@ -135,14 +109,8 @@ export const trackingService = {
       .select()
       .single();
 
-    logNotice('hydration_logs', error);
-    return data ?? ({
-      id: `hyd-${Date.now()}`,
-      user_id: userId,
-      amount_ml: amountMl,
-      daily_target_ml: dailyTargetMl,
-      logged_at: new Date().toISOString(),
-    } as HydrationLog);
+    if (error) throw error;
+    return data;
   },
 
   /**
@@ -165,14 +133,8 @@ export const trackingService = {
       .select()
       .single();
 
-    logNotice('vitamin_logs', error);
-    return data ?? ({
-      id: `vit-${Date.now()}`,
-      user_id: userId,
-      vitamin_name: vitaminName,
-      notes: notes ?? null,
-      logged_at: new Date().toISOString(),
-    } as VitaminLog);
+    if (error) throw error;
+    return data;
   },
 
   /**
@@ -197,15 +159,8 @@ export const trackingService = {
       .select()
       .single();
 
-    logNotice('weight_logs', error);
-    return data ?? ({
-      id: `wgt-${Date.now()}`,
-      user_id: userId,
-      weight_kg: weightKg,
-      pregnancy_week: pregnancyWeek,
-      notes: notes ?? null,
-      logged_at: new Date().toISOString(),
-    } as WeightLog);
+    if (error) throw error;
+    return data;
   },
 
   /**
@@ -232,16 +187,8 @@ export const trackingService = {
       .select()
       .single();
 
-    logNotice('kick_logs', error);
-    return data ?? ({
-      id: `kick-${Date.now()}`,
-      user_id: userId,
-      kick_count: kickCount,
-      duration_seconds: durationSeconds,
-      pregnancy_week: pregnancyWeek,
-      notes: notes ?? null,
-      logged_at: new Date().toISOString(),
-    } as KickLog);
+    if (error) throw error;
+    return data;
   },
 
   async getAggregatedAIContext(userId: string) {
@@ -273,7 +220,8 @@ export const trackingService = {
       ]);
 
       const localTracking = useTrackingStore.getState();
-      const allHydration = [...(hydration.data ?? []), ...(localTracking.hydrationLogs ?? [])];
+      // Local logs are copies of saved rows, so adding both counted every glass twice
+      const allHydration = hydration.error ? localTracking.hydrationLogs ?? [] : hydration.data ?? [];
 
       const hydrationByDate: Record<string, { total_ml: number; entries_count: number }> = {};
 

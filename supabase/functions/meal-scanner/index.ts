@@ -1,8 +1,9 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
-import { corsHeaders, gemini, getCaller, json } from '../_shared/auth.ts';
+import { corsHeaders, gemini, getCaller, isPremium, json, weeklyUsage } from '../_shared/auth.ts';
 
 const MODEL = Deno.env.get('GEMINI_MODEL') || 'gemini-3.1-flash-lite';
 const MAX_IMAGE_BASE64 = 8_000_000; // ~6 MB JPEG
+const FREE_WEEKLY_SCANS = 5; // keep in sync with FREE_PHOTO_LIMIT in src/core/constants.ts
 
 const SYSTEM_PROMPT = `You are an expert nutritionist for pregnant women. Estimate the calories and macronutrients of the meal in the image, name it, and write a concise, friendly description for pregnancy nutrition tracking.
 Then judge pregnancy safety. Set is_pregnancy_safe to false if the meal likely contains any of:
@@ -41,6 +42,11 @@ Deno.serve(async (req: Request) => {
     if (typeof image_base64 !== 'string' || !image_base64) return json({ error: 'Missing image_base64' }, 400);
     if (image_base64.length > MAX_IMAGE_BASE64) return json({ error: 'Image too large' }, 413);
 
+    const { scans } = await weeklyUsage(caller.supabase);
+    if (scans >= FREE_WEEKLY_SCANS && !(await isPremium(caller.user.id))) {
+      return json({ error: 'free_limit_reached' }, 402);
+    }
+
     const data = await gemini(MODEL, {
       systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
       contents: [
@@ -60,6 +66,10 @@ Deno.serve(async (req: Request) => {
     const rawText = data.candidates?.[0]?.content?.parts?.find((p: { text?: string }) => p.text)?.text;
     if (!rawText) throw new Error('No text returned from Gemini');
     const result = JSON.parse(rawText);
+
+    // Counted once Gemini answered, non-food photos included (they cost the same tokens).
+    const { error: usageError } = await caller.supabase.rpc('increment_ai_scans');
+    if (usageError) console.error('increment_ai_scans failed:', usageError);
     if (!result.is_food) return json({ error: "That doesn't look like a meal. Try another photo." }, 422);
 
     return json(result);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal } from 'react-native';
+import { Modal, Alert } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { useTheme } from '@shopify/restyle';
@@ -10,6 +10,7 @@ import { Touchable } from '@/components/primitives/Touchable';
 import { usePregnancyWeek } from '@/hooks/usePregnancyWeek';
 import { useAuthStore } from '@/stores/authStore';
 import { useTrackingStore } from '@/stores/trackingStore';
+import { trackingService } from '@/features/tracking/services/trackingService';
 import { getWeekInfo } from '@/utils/pregnancy';
 import { formatDate, getDueDate, getDueDateWeekRange } from '@/utils/date';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +23,28 @@ export function HomeScreen() {
   const { todayCalories, todayWater, vitaminsTaken, logWater, toggleVitamin } = useTrackingStore();
   const weekInfo = getWeekInfo(currentWeek);
   const [showDueModal, setShowDueModal] = useState(false);
+
+  // Same saves as the Track tab; these taps used to change only the on-device totals
+  const addWater = async () => {
+    if (!user?.id) return;
+    try {
+      await trackingService.logWater(user.id, 250);
+      logWater(250);
+    } catch (err) {
+      console.warn('Failed to save water log', err);
+      Alert.alert('Not saved', 'Could not save this glass of water. Check your connection and try again.');
+    }
+  };
+
+  const togglePrenatal = () => {
+    toggleVitamin('prenatal');
+    if (!user?.id || vitaminsTaken.includes('prenatal')) return;
+    trackingService.logVitamin(user.id, 'Prenatal Multivitamin').catch((err) => {
+      console.warn('Failed to sync vitamin log', err);
+      toggleVitamin('prenatal');
+      Alert.alert('Not saved', 'Could not save this vitamin. Check your connection and try again.');
+    });
+  };
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -318,7 +341,7 @@ export function HomeScreen() {
                   <Ionicons name="water" size={17} color={theme.colors.info} />
                 </Box>
                 <Touchable
-                  onPress={() => logWater(250)}
+                  onPress={addWater}
                   activeScale={0.88}
                   hitSlop={8}
                   accessibilityLabel="Add 250ml water"
@@ -377,7 +400,7 @@ export function HomeScreen() {
                   <Ionicons name="medkit" size={17} color={theme.colors.secondary} />
                 </Box>
                 <Touchable
-                  onPress={() => toggleVitamin('prenatal')}
+                  onPress={togglePrenatal}
                   activeScale={0.88}
                   hitSlop={8}
                   accessibilityLabel="Toggle prenatal vitamin"

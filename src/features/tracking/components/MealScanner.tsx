@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Modal, StyleSheet, Alert, ScrollView } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
+import { router } from 'expo-router';
 import { useTheme } from '@shopify/restyle';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +14,18 @@ import { trackingService } from '../services/trackingService';
 import { useAuthStore } from '@/stores/authStore';
 import { type Theme, GRADIENTS } from '@/theme/theme';
 import { formatLogTimestamp } from '@/utils/date';
+import { FREE_PHOTO_LIMIT } from '@/core/constants';
+
+function showScanError(err: any) {
+  if (err?.message === 'free_limit_reached') {
+    Alert.alert('Free scans used', `You've used this week's ${FREE_PHOTO_LIMIT} free meal scans. Nurture Pro scans without limits.`, [
+      { text: 'Not now', style: 'cancel' },
+      { text: 'Upgrade', onPress: () => router.push('/(modals)/paywall') },
+    ]);
+    return;
+  }
+  Alert.alert('Analysis Failed', err?.message || 'Could not analyze the meal. Please try again.');
+}
 
 export function MealScanner() {
   const theme = useTheme<Theme>();
@@ -72,7 +85,7 @@ export function MealScanner() {
       closeCamera();
     } catch (err: any) {
       console.warn('Failed to scan meal:', err);
-      Alert.alert('Analysis Failed', err.message || 'Could not analyze the meal. Please try again.');
+      showScanError(err);
       setIsAnalyzing(false);
     }
   };
@@ -92,7 +105,7 @@ export function MealScanner() {
       }
     } catch (err: any) {
       console.warn('Failed to scan meal from gallery:', err);
-      Alert.alert('Analysis Failed', err.message || 'Could not analyze the meal. Please try again.');
+      showScanError(err);
     } finally {
       setIsAnalyzing(false);
     }

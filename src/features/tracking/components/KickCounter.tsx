@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Alert } from 'react-native';
 import { useTheme } from '@shopify/restyle';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -49,13 +50,20 @@ export function KickCounter() {
     if (timerRef.current) clearInterval(timerRef.current);
 
     if (user?.id) {
-      const log = await trackingService.logKickSession(
-        user.id,
-        kickCount,
-        seconds,
-        currentWeek
-      );
-      addKickLog(log);
+      try {
+        const log = await trackingService.logKickSession(
+          user.id,
+          kickCount,
+          seconds,
+          currentWeek
+        );
+        addKickLog(log);
+      } catch (err) {
+        // Keep the count on screen so Finish can be tapped again
+        console.warn('Failed to save kick session', err);
+        Alert.alert('Not saved', 'Could not save this kick session. Check your connection and try again.');
+        return;
+      }
     }
 
     setKickCount(0);

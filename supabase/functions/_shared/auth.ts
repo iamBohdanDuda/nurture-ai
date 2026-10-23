@@ -1,4 +1,4 @@
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 
 export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -42,4 +42,39 @@ export async function gemini(model: string, payload: unknown) {
     throw new Error(`Gemini error (${res.status}): ${data.error?.message ?? 'unknown'}`);
   }
   return data;
+}
+
+/** RevenueCat is the source of truth for Pro (the app logs in to RevenueCat with the Supabase user id). */
+export async function isPremium(userId: string): Promise<boolean> {
+  const key = Deno.env.get('REVENUECAT_SECRET_KEY');
+  if (!key) {
+    console.warn('REVENUECAT_SECRET_KEY not set: free limits are not enforced');
+    return true;
+  }
+  try {
+    const res = await fetch(`https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(userId)}`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    if (!res.ok) throw new Error(`RevenueCat ${res.status}`);
+    const { subscriber } = await res.json();
+    // deno-lint-ignore no-explicit-any
+    return Object.values(subscriber?.entitlements ?? {}).some(
+      (e: any) => !e.expires_date || Date.parse(e.expires_date) > Date.now()
+    );
+  } catch (err) {
+    // ponytail: fail open so a RevenueCat outage doesn't lock out paying users.
+    console.warn('RevenueCat check failed, allowing request:', err);
+    return true;
+  }
+}
+
+/**
+ * This week's free-tier counters. The counters live in a table users can't write, so deleting
+ * chats or reinstalling doesn't reset them. Callers increment only after the model answered.
+ */
+export async function weeklyUsage(supabase: SupabaseClient) {
+  const { data, error } = await supabase.rpc('get_ai_usage').maybeSingle();
+  if (error) throw error;
+  const row = data as { messages: number; scans: number } | null;
+  return { messages: row?.messages ?? 0, scans: row?.scans ?? 0 };
 }

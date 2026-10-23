@@ -1,6 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
-import { corsHeaders, gemini, getCaller, json } from '../_shared/auth.ts';
+import { corsHeaders, gemini, getCaller, isPremium, json, weeklyUsage } from '../_shared/auth.ts';
 import { MEMORY_SECTIONS, URGENT_NOTICE, addFact, isUrgent, pickModel } from './helpers.ts';
 
 const DEFAULT_GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') || 'gemini-3.1-flash-lite';
@@ -233,30 +233,6 @@ async function chatOpenAICompatible(provider: string, model: string, system: str
   throw new Error(`${provider} exceeded tool rounds`);
 }
 
-/** RevenueCat is the source of truth for Pro (the app logs in to RevenueCat with the Supabase user id). */
-async function isPremium(userId: string): Promise<boolean> {
-  const key = Deno.env.get('REVENUECAT_SECRET_KEY');
-  if (!key) {
-    console.warn('REVENUECAT_SECRET_KEY not set: free message limit is not enforced');
-    return true;
-  }
-  try {
-    const res = await fetch(`https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(userId)}`, {
-      headers: { Authorization: `Bearer ${key}` },
-    });
-    if (!res.ok) throw new Error(`RevenueCat ${res.status}`);
-    const { subscriber } = await res.json();
-    // deno-lint-ignore no-explicit-any
-    return Object.values(subscriber?.entitlements ?? {}).some(
-      (e: any) => !e.expires_date || Date.parse(e.expires_date) > Date.now()
-    );
-  } catch (err) {
-    // ponytail: fail open so a RevenueCat outage doesn't lock out paying users.
-    console.warn('RevenueCat check failed, allowing message:', err);
-    return true;
-  }
-}
-
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -276,10 +252,9 @@ Deno.serve(async (req: Request) => {
       .filter((m: Turn) => m.content);
     if (history.at(-1)?.role !== 'user') return json({ error: 'messages must end with a user message' }, 400);
 
-    // Counter lives in a table users can't write, so deleting chats doesn't reset it.
-    const { data: used, error: usageError } = await supabase.rpc('increment_ai_usage');
-    if (usageError) throw usageError;
-    if (used > FREE_WEEKLY_LIMIT && !(await isPremium(user.id))) {
+    // ponytail: check-then-increment, so parallel sends can overshoot by one; fine at 10/week.
+    const { messages: used } = await weeklyUsage(supabase);
+    if (used >= FREE_WEEKLY_LIMIT && !(await isPremium(user.id))) {
       return json({ error: 'free_limit_reached' }, 402);
     }
 
@@ -308,6 +283,10 @@ Deno.serve(async (req: Request) => {
 
     // Deterministic safety net: warning signs always get this notice, whatever the model said.
     if (isUrgent(history[history.length - 1].content)) reply = `${URGENT_NOTICE}\n\n${reply}`;
+
+    // Only answered messages count; the reply is already paid for, so a failed bump doesn't fail it.
+    const { error: usageError } = await supabase.rpc('increment_ai_usage');
+    if (usageError) console.error('increment_ai_usage failed:', usageError);
 
     return json({ reply, tool_call_hint: ctx.hints.join(' · ') || null, provider, model });
   } catch (err) {
